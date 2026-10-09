@@ -517,6 +517,215 @@
       .nav-actions { width: 100%; }
       .nav-actions .btn { flex: 1; }
     }
+    
+/* ESTRUTURA DA APLICACAO */
+#accountPage {
+  padding: 0;
+  min-height: 100vh;
+}
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-sidebar {
+  width: 250px;
+  flex-shrink: 0;
+  background: var(--navy);
+  color: #fff;
+  padding: 22px 14px;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.25s ease;
+}
+
+.app-sidebar.collapsed {
+  width: 78px;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px 25px;
+  font-weight: bold;
+  font-size: 17px;
+}
+
+.sidebar-brand-icon {
+  min-width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--navy);
+  font-size: 22px;
+}
+
+.sidebar-toggle {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #49647d;
+  border-radius: 9px;
+  background: transparent;
+  color: #fff;
+  text-align: left;
+  font-size: 14px;
+}
+
+.sidebar-nav {
+  display: grid;
+  gap: 7px;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  min-height: 45px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #d9e2ec;
+  text-align: left;
+  font-size: 14px;
+}
+
+.sidebar-link:hover,
+.sidebar-link.active {
+  background: #1d4265;
+  color: #fff;
+}
+
+.sidebar-icon {
+  width: 24px;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 19px;
+}
+
+.app-sidebar.collapsed .sidebar-brand-name,
+.app-sidebar.collapsed .sidebar-label,
+.app-sidebar.collapsed .toggle-label {
+  display: none;
+}
+
+.app-sidebar.collapsed .sidebar-brand {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.app-sidebar.collapsed .sidebar-link {
+  justify-content: center;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.app-sidebar.collapsed .sidebar-toggle {
+  text-align: center;
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  padding: 30px;
+}
+
+.app-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 28px;
+}
+
+.app-topbar h2 {
+  color: var(--navy);
+  font-size: 25px;
+}
+
+.module-view {
+  width: 100%;
+}
+
+.module-placeholder {
+  margin-top: 22px;
+  padding: 25px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.module-placeholder h3 {
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.module-placeholder p {
+  color: var(--muted);
+}
+
+.app-main .welcome-card {
+  margin-bottom: 22px;
+}
+
+@media (max-width: 760px) {
+  .app-layout {
+    flex-direction: column;
+  }
+
+  .app-sidebar,
+  .app-sidebar.collapsed {
+    width: 100%;
+    padding: 12px;
+  }
+
+  .sidebar-brand {
+    padding-bottom: 12px;
+  }
+
+  .sidebar-toggle {
+    width: auto;
+    margin-bottom: 12px;
+  }
+
+  .sidebar-nav {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .sidebar-link,
+  .app-sidebar.collapsed .sidebar-link {
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 3px;
+    font-size: 11px;
+    text-align: center;
+  }
+
+  .app-sidebar.collapsed .sidebar-label {
+    display: block;
+  }
+
+  .app-sidebar.collapsed .sidebar-brand-name,
+  .app-sidebar.collapsed .toggle-label {
+    display: inline;
+  }
+
+  .app-main {
+    padding: 18px 14px;
+  }
+
+  .app-topbar h2 {
+    font-size: 21px;
+  }
+}
   </style>
 </head>
 
@@ -646,176 +855,328 @@
     </section>
 
 
+
 <section class="user-panel hidden" id="accountPage">
-  <div class="container">
+  <div class="app-layout">
 
-    <div class="welcome-card">
-      <h2 id="welcomeTitle">Bem-vindo!</h2>
-      <p>Gira os seus rendimentos e despesas num único lugar.</p>
-      <p class="finance-logout-note">
-        Os movimentos são associados à sua conta.
-      </p>
-    </div>
-
-    <div id="financeStatus" class="finance-status" role="status"
-         aria-live="polite"></div>
-
-    <div class="finance-summary">
-      <article class="finance-card">
-        <p>Total de receitas</p>
-        <h3 class="positive" id="totalIncome">0,00 MT</h3>
-      </article>
-
-      <article class="finance-card">
-        <p>Total de despesas</p>
-        <h3 class="negative" id="totalExpenses">0,00 MT</h3>
-      </article>
-
-      <article class="finance-card">
-        <p>Saldo disponível</p>
-        <h3 id="availableBalance">0,00 MT</h3>
-      </article>
-    </div>
-
-    <div class="finance-toolbar">
-      <div>
-        <h2 style="color:#102A43">Movimentos financeiros</h2>
-        <p style="color:#627D98;font-size:14px">
-          Registe e acompanhe a entrada e a saída do seu dinheiro.
-        </p>
+    <!-- MENU LATERAL -->
+    <aside class="app-sidebar" id="appSidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-icon">M</div>
+        <span class="sidebar-brand-name">Minhas Finanças</span>
       </div>
-      <button type="button" class="btn btn-secondary"
-              id="refreshMovements">
-        Actualizar dados
+
+      <button type="button" class="sidebar-toggle" id="sidebarToggle"
+              aria-label="Recolher ou expandir menu"
+              aria-expanded="true">
+        <span class="sidebar-icon">☰</span>
+        <span class="toggle-label">Recolher menu</span>
       </button>
-    </div>
 
-    <div class="finance-grid">
+      <nav class="sidebar-nav" aria-label="Menu principal">
 
-      <section class="finance-form-card">
-        <h3>＋ Registar receita</h3>
+        <button type="button"
+                class="sidebar-link active"
+                data-module="dashboard"
+                title="Dashboard">
+          <span class="sidebar-icon">▦</span>
+          <span class="sidebar-label">Dashboard</span>
+        </button>
 
-        <form id="incomeForm">
-          <div class="form-group">
-            <label for="incomeDescription">Descrição</label>
-            <input id="incomeDescription" name="description"
-                   maxlength="150" placeholder="Ex.: Salário mensal"
-                   required>
-          </div>
+        <button type="button" class="sidebar-link"
+                data-module="income" title="Receitas">
+          <span class="sidebar-icon">↗</span>
+          <span class="sidebar-label">Receitas</span>
+        </button>
 
-          <div class="form-group">
-            <label for="incomeAmount">Valor (MT)</label>
-            <input id="incomeAmount" name="amount" type="number"
-                   min="0.01" step="0.01" required
-                   placeholder="Ex.: 15000">
-          </div>
+        <button type="button" class="sidebar-link"
+                data-module="expenses" title="Despesas">
+          <span class="sidebar-icon">↙</span>
+          <span class="sidebar-label">Despesas</span>
+        </button>
 
-          <div class="form-group">
-            <label for="incomeCategory">Categoria</label>
-            <select id="incomeCategory" name="category" required>
-              <option value="Salário">Salário</option>
-              <option value="Negócio">Negócio</option>
-              <option value="Serviços">Serviços</option>
-              <option value="Investimentos">Investimentos</option>
-              <option value="Outros" selected>Outros</option>
-            </select>
-          </div>
+        <button type="button" class="sidebar-link"
+                data-module="reports" title="Relatórios">
+          <span class="sidebar-icon">▤</span>
+          <span class="sidebar-label">Relatórios</span>
+        </button>
 
-          <div class="form-group">
-            <label for="incomeDate">Data</label>
-            <input id="incomeDate" name="date" type="date" required>
-          </div>
+        <button type="button" class="sidebar-link"
+                data-module="budget" title="Orçamento">
+          <span class="sidebar-icon">▣</span>
+          <span class="sidebar-label">Orçamento</span>
+        </button>
 
-          <button type="submit" class="btn btn-primary full-width"
-                  id="saveIncome">
-            Guardar receita
-          </button>
-        </form>
-      </section>
+        <button type="button" class="sidebar-link"
+                data-module="savings" title="Poupanças">
+          <span class="sidebar-icon">◎</span>
+          <span class="sidebar-label">Poupanças</span>
+        </button>
 
-      <section class="finance-form-card">
-        <h3>− Registar despesa</h3>
+        <button type="button" class="sidebar-link"
+                data-module="debts" title="Dívidas">
+          <span class="sidebar-icon">⇄</span>
+          <span class="sidebar-label">Dívidas</span>
+        </button>
 
-        <form id="expenseForm">
-          <div class="form-group">
-            <label for="expenseDescription">Descrição</label>
-            <input id="expenseDescription" name="description"
-                   maxlength="150" placeholder="Ex.: Compra de alimentos"
-                   required>
-          </div>
+        <button type="button" class="sidebar-link"
+                data-module="settings" title="Definições">
+          <span class="sidebar-icon">⚙</span>
+          <span class="sidebar-label">Definições</span>
+        </button>
 
-          <div class="form-group">
-            <label for="expenseAmount">Valor (MT)</label>
-            <input id="expenseAmount" name="amount" type="number"
-                   min="0.01" step="0.01" required
-                   placeholder="Ex.: 500">
-          </div>
+      </nav>
+    </aside>
 
-          <div class="form-group">
-            <label for="expenseCategory">Categoria</label>
-            <select id="expenseCategory" name="category" required>
-              <option value="Alimentação">Alimentação</option>
-              <option value="Transporte">Transporte</option>
-              <option value="Habitação">Habitação</option>
-              <option value="Saúde">Saúde</option>
-              <option value="Educação">Educação</option>
-              <option value="Comunicação">Comunicação</option>
-              <option value="Lazer">Lazer</option>
-              <option value="Outros" selected>Outros</option>
-            </select>
-          </div>
+    <!-- ÁREA PRINCIPAL -->
+    <div class="app-main">
 
-          <div class="form-group">
-            <label for="expenseDate">Data</label>
-            <input id="expenseDate" name="date" type="date" required>
-          </div>
-
-          <div class="form-group">
-            <label for="paymentMethod">Forma de pagamento</label>
-            <select id="paymentMethod" name="payment_method">
-              <option value="Numerário">Numerário</option>
-              <option value="M-Pesa">M-Pesa</option>
-              <option value="e-Mola">e-Mola</option>
-              <option value="Transferência bancária">Transferência bancária</option>
-              <option value="Cartão">Cartão</option>
-              <option value="Outro">Outro</option>
-            </select>
-          </div>
-
-          <button type="submit" class="btn btn-primary full-width"
-                  id="saveExpense">
-            Guardar despesa
-          </button>
-        </form>
-      </section>
-
-    </div>
-
-    <section class="history-card">
-      <h3>Histórico de movimentos</h3>
-      <div class="history-scroll">
-        <table class="finance-table">
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Tipo</th>
-              <th>Descrição</th>
-              <th>Categoria</th>
-              <th>Valor</th>
-              <th>Acção</th>
-            </tr>
-          </thead>
-          <tbody id="movementHistory">
-            <tr>
-              <td colspan="6" class="finance-empty">
-                A carregar movimentos...
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="app-topbar">
+        <div>
+          <h2 id="moduleTitle">Dashboard</h2>
+          <p style="color:#627D98;font-size:14px">
+            Organize hoje. Conquiste amanhã.
+          </p>
+        </div>
       </div>
-    </section>
 
+      <div id="financeStatus" class="finance-status"
+           role="status" aria-live="polite"></div>
+
+      <!-- MÓDULO: DASHBOARD -->
+      <section class="module-view" id="module-dashboard">
+
+        <div class="welcome-card">
+          <h2 id="welcomeTitle">Bem-vindo!</h2>
+          <p>Tenha uma visão clara da sua situação financeira.</p>
+          <p class="finance-logout-note">
+            Os movimentos são associados à sua conta.
+          </p>
+        </div>
+
+        <div class="finance-summary">
+          <article class="finance-card">
+            <p>Total de receitas</p>
+            <h3 class="positive" id="totalIncome">0,00 MT</h3>
+          </article>
+
+          <article class="finance-card">
+            <p>Total de despesas</p>
+            <h3 class="negative" id="totalExpenses">0,00 MT</h3>
+          </article>
+
+          <article class="finance-card">
+            <p>Saldo disponível</p>
+            <h3 id="availableBalance">0,00 MT</h3>
+          </article>
+        </div>
+
+        <div class="module-placeholder">
+          <h3>Os seus movimentos</h3>
+          <p>Registe as suas receitas e despesas através do menu lateral.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px">
+            <button type="button" class="btn btn-primary"
+                    data-go-module="income">
+              + Registar receita
+            </button>
+            <button type="button" class="btn btn-secondary"
+                    data-go-module="expenses">
+              − Registar despesa
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- MÓDULO: RECEITAS -->
+      <section class="module-view hidden" id="module-income">
+        <div class="finance-form-card">
+          <h3>＋ Registar receita</h3>
+
+          <form id="incomeForm">
+            <div class="form-group">
+              <label for="incomeDescription">Descrição</label>
+              <input id="incomeDescription" name="description"
+                     maxlength="150" placeholder="Ex.: Salário mensal"
+                     required>
+            </div>
+
+            <div class="form-group">
+              <label for="incomeAmount">Valor (MT)</label>
+              <input id="incomeAmount" name="amount" type="number"
+                     min="0.01" step="0.01" required
+                     placeholder="Ex.: 15000">
+            </div>
+
+            <div class="form-group">
+              <label for="incomeCategory">Categoria</label>
+              <select id="incomeCategory" name="category" required>
+                <option value="Salário">Salário</option>
+                <option value="Negócio">Negócio</option>
+                <option value="Serviços">Serviços</option>
+                <option value="Investimentos">Investimentos</option>
+                <option value="Outros" selected>Outros</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="incomeDate">Data</label>
+              <input id="incomeDate" name="date" type="date" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary full-width"
+                    id="saveIncome">
+              Guardar receita
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- MÓDULO: DESPESAS -->
+      <section class="module-view hidden" id="module-expenses">
+        <div class="finance-form-card">
+          <h3>− Registar despesa</h3>
+
+          <form id="expenseForm">
+            <div class="form-group">
+              <label for="expenseDescription">Descrição</label>
+              <input id="expenseDescription" name="description"
+                     maxlength="150" placeholder="Ex.: Compra de alimentos"
+                     required>
+            </div>
+
+            <div class="form-group">
+              <label for="expenseAmount">Valor (MT)</label>
+              <input id="expenseAmount" name="amount" type="number"
+                     min="0.01" step="0.01" required
+                     placeholder="Ex.: 500">
+            </div>
+
+            <div class="form-group">
+              <label for="expenseCategory">Categoria</label>
+              <select id="expenseCategory" name="category" required>
+                <option value="Alimentação">Alimentação</option>
+                <option value="Transporte">Transporte</option>
+                <option value="Habitação">Habitação</option>
+                <option value="Saúde">Saúde</option>
+                <option value="Educação">Educação</option>
+                <option value="Comunicação">Comunicação</option>
+                <option value="Lazer">Lazer</option>
+                <option value="Outros" selected>Outros</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="expenseDate">Data</label>
+              <input id="expenseDate" name="date" type="date" required>
+            </div>
+
+            <div class="form-group">
+              <label for="paymentMethod">Forma de pagamento</label>
+              <select id="paymentMethod" name="payment_method">
+                <option value="Numerário">Numerário</option>
+                <option value="M-Pesa">M-Pesa</option>
+                <option value="e-Mola">e-Mola</option>
+                <option value="Transferência bancária">Transferência bancária</option>
+                <option value="Cartão">Cartão</option>
+                <option value="Outro">Outro</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary full-width"
+                    id="saveExpense">
+              Guardar despesa
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- MÓDULO: RELATÓRIOS -->
+      <section class="module-view hidden" id="module-reports">
+        <div class="module-placeholder">
+          <h3>Relatórios e análises</h3>
+          <p>Este módulo será desenvolvido numa etapa posterior,
+             com filtros por período, gráficos e relatórios financeiros.</p>
+        </div>
+      </section>
+
+      <!-- MÓDULO: ORÇAMENTO -->
+      <section class="module-view hidden" id="module-budget">
+        <div class="module-placeholder">
+          <h3>Orçamento mensal</h3>
+          <p>Prepare limites de despesas e acompanhe a sua execução.
+             A funcionalidade será implementada numa próxima etapa.</p>
+        </div>
+      </section>
+
+      <!-- MÓDULO: POUPANÇAS -->
+      <section class="module-view hidden" id="module-savings">
+        <div class="module-placeholder">
+          <h3>Poupanças e objectivos</h3>
+          <p>Defina metas de poupança e acompanhe o seu progresso.
+             Este módulo será desenvolvido posteriormente.</p>
+        </div>
+      </section>
+
+      <!-- MÓDULO: DÍVIDAS -->
+      <section class="module-view hidden" id="module-debts">
+        <div class="module-placeholder">
+          <h3>Gestão de dívidas</h3>
+          <p>Organize os valores em dívida, os pagamentos e os saldos
+             pendentes. A funcionalidade será acrescentada numa próxima etapa.</p>
+        </div>
+      </section>
+
+      <!-- MÓDULO: DEFINIÇÕES -->
+      <section class="module-view hidden" id="module-settings">
+        <div class="module-placeholder">
+          <h3>Definições</h3>
+          <p>As preferências da aplicação serão disponibilizadas
+             numa etapa posterior.</p>
+        </div>
+      </section>
+
+      <!-- HISTÓRICO DOS MOVIMENTOS -->
+      <section class="history-card">
+        <div class="finance-toolbar" style="margin-top:0">
+          <div>
+            <h3>Histórico de movimentos</h3>
+            <p style="color:#627D98;font-size:14px">
+              Consulte e actualize os seus registos.
+            </p>
+          </div>
+          <button type="button" class="btn btn-secondary"
+                  id="refreshMovements">
+            Actualizar dados
+          </button>
+        </div>
+
+        <div class="history-scroll">
+          <table class="finance-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Tipo</th>
+                <th>Descrição</th>
+                <th>Categoria</th>
+                <th>Valor</th>
+                <th>Acção</th>
+              </tr>
+            </thead>
+            <tbody id="movementHistory">
+              <tr>
+                <td colspan="6" class="finance-empty">
+                  A carregar movimentos...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
   </div>
 </section>  </main>
 
