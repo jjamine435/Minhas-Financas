@@ -348,6 +348,154 @@
       border-radius: 12px;
     }
 
+/* PAINEL FINANCEIRO */
+.finance-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 25px;
+}
+
+.finance-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px;
+  min-width: 0;
+}
+
+.finance-card p {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.finance-card h3 {
+  font-size: clamp(18px, 2.5vw, 25px);
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+
+.finance-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 28px 0 16px;
+}
+
+.finance-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.finance-form-card,
+.history-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 23px;
+  min-width: 0;
+}
+
+.finance-form-card h3,
+.history-card h3 {
+  color: var(--navy);
+  margin-bottom: 18px;
+}
+
+.finance-form-card .form-group {
+  margin-bottom: 14px;
+}
+
+.finance-form-card input,
+.finance-form-card select,
+.finance-form-card textarea {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #BCCCDC;
+  border-radius: 8px;
+  background: white;
+  color: var(--text);
+  font: inherit;
+}
+
+.finance-form-card input:focus,
+.finance-form-card select:focus,
+.finance-form-card textarea:focus {
+  outline: 2px solid var(--blue-light);
+  border-color: var(--blue);
+}
+
+.finance-status {
+  margin: 14px 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.history-card {
+  margin-top: 24px;
+}
+
+.history-scroll {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.finance-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.finance-table th,
+.finance-table td {
+  text-align: left;
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.finance-table th {
+  color: var(--muted);
+  background: #F8FAFC;
+}
+
+.delete-movement {
+  border: 1px solid #F2C5CB;
+  color: var(--red);
+  background: #FFFFFF;
+  padding: 6px 9px;
+  border-radius: 6px;
+}
+
+.finance-empty {
+  color: var(--muted);
+  text-align: center;
+  padding: 25px 10px;
+}
+
+.finance-logout-note {
+  color: #D9E2EC;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+@media (max-width: 760px) {
+  .finance-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .finance-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .finance-form-card,
+  .history-card {
+    padding: 17px;
+  }
+}
     @media (max-width: 760px) {
       .hero-grid { grid-template-columns: 1fr; gap: 35px; }
       .features { grid-template-columns: 1fr; }
@@ -497,23 +645,179 @@
       </div>
     </section>
 
-    <section class="user-panel hidden" id="accountPage">
-      <div class="container">
-        <div class="welcome-card">
-          <h2 id="welcomeTitle">Bem-vindo!</h2>
-          <p>A sua sessão foi iniciada com sucesso.</p>
-        </div>
-        <div class="panel-note">
-          <h3 style="color:#102A43;margin-bottom:10px">A sua conta está activa</h3>
-          <p>
-            A autenticação está preparada. O painel completo para registar
-            rendimentos, despesas, orçamentos, dívidas e poupanças será
-            implementado na próxima etapa.
-          </p>
-        </div>
+
+<section class="user-panel hidden" id="accountPage">
+  <div class="container">
+
+    <div class="welcome-card">
+      <h2 id="welcomeTitle">Bem-vindo!</h2>
+      <p>Gira os seus rendimentos e despesas num único lugar.</p>
+      <p class="finance-logout-note">
+        Os movimentos são associados à sua conta.
+      </p>
+    </div>
+
+    <div id="financeStatus" class="finance-status" role="status"
+         aria-live="polite"></div>
+
+    <div class="finance-summary">
+      <article class="finance-card">
+        <p>Total de receitas</p>
+        <h3 class="positive" id="totalIncome">0,00 MT</h3>
+      </article>
+
+      <article class="finance-card">
+        <p>Total de despesas</p>
+        <h3 class="negative" id="totalExpenses">0,00 MT</h3>
+      </article>
+
+      <article class="finance-card">
+        <p>Saldo disponível</p>
+        <h3 id="availableBalance">0,00 MT</h3>
+      </article>
+    </div>
+
+    <div class="finance-toolbar">
+      <div>
+        <h2 style="color:#102A43">Movimentos financeiros</h2>
+        <p style="color:#627D98;font-size:14px">
+          Registe e acompanhe a entrada e a saída do seu dinheiro.
+        </p>
+      </div>
+      <button type="button" class="btn btn-secondary"
+              id="refreshMovements">
+        Actualizar dados
+      </button>
+    </div>
+
+    <div class="finance-grid">
+
+      <section class="finance-form-card">
+        <h3>＋ Registar receita</h3>
+
+        <form id="incomeForm">
+          <div class="form-group">
+            <label for="incomeDescription">Descrição</label>
+            <input id="incomeDescription" name="description"
+                   maxlength="150" placeholder="Ex.: Salário mensal"
+                   required>
+          </div>
+
+          <div class="form-group">
+            <label for="incomeAmount">Valor (MT)</label>
+            <input id="incomeAmount" name="amount" type="number"
+                   min="0.01" step="0.01" required
+                   placeholder="Ex.: 15000">
+          </div>
+
+          <div class="form-group">
+            <label for="incomeCategory">Categoria</label>
+            <select id="incomeCategory" name="category" required>
+              <option value="Salário">Salário</option>
+              <option value="Negócio">Negócio</option>
+              <option value="Serviços">Serviços</option>
+              <option value="Investimentos">Investimentos</option>
+              <option value="Outros" selected>Outros</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="incomeDate">Data</label>
+            <input id="incomeDate" name="date" type="date" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary full-width"
+                  id="saveIncome">
+            Guardar receita
+          </button>
+        </form>
+      </section>
+
+      <section class="finance-form-card">
+        <h3>− Registar despesa</h3>
+
+        <form id="expenseForm">
+          <div class="form-group">
+            <label for="expenseDescription">Descrição</label>
+            <input id="expenseDescription" name="description"
+                   maxlength="150" placeholder="Ex.: Compra de alimentos"
+                   required>
+          </div>
+
+          <div class="form-group">
+            <label for="expenseAmount">Valor (MT)</label>
+            <input id="expenseAmount" name="amount" type="number"
+                   min="0.01" step="0.01" required
+                   placeholder="Ex.: 500">
+          </div>
+
+          <div class="form-group">
+            <label for="expenseCategory">Categoria</label>
+            <select id="expenseCategory" name="category" required>
+              <option value="Alimentação">Alimentação</option>
+              <option value="Transporte">Transporte</option>
+              <option value="Habitação">Habitação</option>
+              <option value="Saúde">Saúde</option>
+              <option value="Educação">Educação</option>
+              <option value="Comunicação">Comunicação</option>
+              <option value="Lazer">Lazer</option>
+              <option value="Outros" selected>Outros</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="expenseDate">Data</label>
+            <input id="expenseDate" name="date" type="date" required>
+          </div>
+
+          <div class="form-group">
+            <label for="paymentMethod">Forma de pagamento</label>
+            <select id="paymentMethod" name="payment_method">
+              <option value="Numerário">Numerário</option>
+              <option value="M-Pesa">M-Pesa</option>
+              <option value="e-Mola">e-Mola</option>
+              <option value="Transferência bancária">Transferência bancária</option>
+              <option value="Cartão">Cartão</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary full-width"
+                  id="saveExpense">
+            Guardar despesa
+          </button>
+        </form>
+      </section>
+
+    </div>
+
+    <section class="history-card">
+      <h3>Histórico de movimentos</h3>
+      <div class="history-scroll">
+        <table class="finance-table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Tipo</th>
+              <th>Descrição</th>
+              <th>Categoria</th>
+              <th>Valor</th>
+              <th>Acção</th>
+            </tr>
+          </thead>
+          <tbody id="movementHistory">
+            <tr>
+              <td colspan="6" class="finance-empty">
+                A carregar movimentos...
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
-  </main>
+
+  </div>
+</section>  </main>
 
   <footer>
     <div class="container">
@@ -638,20 +942,29 @@
       window.scrollTo(0, 0);
     }
 
-    function showAccount(user) {
-      homePage.classList.add("hidden");
-      authPage.classList.add("hidden");
-      accountPage.classList.remove("hidden");
-      document.getElementById("mainNavigation").classList.add("hidden");
-      document.getElementById("userNavigation").classList.remove("hidden");
+   
+let currentFinanceUser = null;
 
-      const metadata = user.user_metadata || {};
-      const displayName = metadata.full_name ||
-        (user.email ? user.email.split("@")[0] : "utilizador");
+function showAccount(user) {
+  homePage.classList.add("hidden");
+  authPage.classList.add("hidden");
+  accountPage.classList.remove("hidden");
 
-      document.getElementById("welcomeTitle").textContent = "Bem-vindo, " + displayName + "!";
-      window.scrollTo(0, 0);
-    }
+  document.getElementById("mainNavigation").classList.add("hidden");
+  document.getElementById("userNavigation").classList.remove("hidden");
+
+  currentFinanceUser = user;
+
+  const metadata = user.user_metadata || {};
+  const displayName = metadata.full_name ||
+    (user.email ? user.email.split("@")[0] : "utilizador");
+
+  document.getElementById("welcomeTitle").textContent =
+    "Bem-vindo, " + displayName + "!";
+
+  window.scrollTo(0, 0);
+  loadFinancialData();
+}
 
     function explainAuthError(error) {
       const message = String((error && error.message) || "").toLowerCase();
@@ -718,6 +1031,306 @@
       showAuth("reset");
     });
 
+const financeStatus = document.getElementById("financeStatus");
+const movementHistory = document.getElementById("movementHistory");
+
+function showFinanceStatus(message, isError = false) {
+  financeStatus.textContent = message;
+  financeStatus.style.color = isError ? "#C0394B" : "#16805D";
+}
+
+function formatMT(value) {
+  return Number(value || 0).toLocaleString("pt-PT", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }) + " MT";
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, function(char) {
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[char];
+  });
+}
+
+function localDateString() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+document.getElementById("incomeDate").value = localDateString();
+document.getElementById("expenseDate").value = localDateString();
+
+function getFinanceError(error) {
+  console.error("Erro financeiro:", error);
+  return error && error.message
+    ? error.message
+    : "Ocorreu um erro inesperado.";
+}
+
+async function loadFinancialData() {
+  if (!supabaseClient || !currentFinanceUser) return;
+
+  showFinanceStatus("A carregar os movimentos...");
+
+  const userId = currentFinanceUser.id;
+
+  try {
+    const [incomeResult, expenseResult] = await Promise.all([
+      supabaseClient
+        .from("income")
+        .select("id,user_id,description,amount,income_date,category,created_at")
+        .eq("user_id", userId)
+        .order("income_date", { ascending: false }),
+
+      supabaseClient
+        .from("expenses")
+        .select("id,user_id,description,amount,expense_date,category,payment_method,created_at")
+        .eq("user_id", userId)
+        .order("expense_date", { ascending: false })
+    ]);
+
+    if (incomeResult.error) throw incomeResult.error;
+    if (expenseResult.error) throw expenseResult.error;
+
+    const incomes = incomeResult.data || [];
+    const expenses = expenseResult.data || [];
+
+    const totalIncome = incomes.reduce(
+      (sum, item) => sum + Number(item.amount || 0), 0
+    );
+
+    const totalExpenses = expenses.reduce(
+      (sum, item) => sum + Number(item.amount || 0), 0
+    );
+
+    const balance = totalIncome - totalExpenses;
+
+    document.getElementById("totalIncome").textContent =
+      formatMT(totalIncome);
+
+    document.getElementById("totalExpenses").textContent =
+      formatMT(totalExpenses);
+
+    const balanceElement = document.getElementById("availableBalance");
+    balanceElement.textContent = formatMT(balance);
+    balanceElement.className = balance < 0 ? "negative" : "positive";
+
+    const movements = [
+      ...incomes.map(item => ({
+        ...item,
+        movementType: "Receita",
+        movementDate: item.income_date,
+        tableName: "income"
+      })),
+      ...expenses.map(item => ({
+        ...item,
+        movementType: "Despesa",
+        movementDate: item.expense_date,
+        tableName: "expenses"
+      }))
+    ].sort((a, b) => {
+      const dateComparison =
+        String(b.movementDate).localeCompare(String(a.movementDate));
+
+      if (dateComparison !== 0) return dateComparison;
+
+      return String(b.created_at || "").localeCompare(
+        String(a.created_at || "")
+      );
+    });
+
+    if (movements.length === 0) {
+      movementHistory.innerHTML =
+        '<tr><td colspan="6" class="finance-empty">' +
+        'Ainda não existem movimentos. Registe a primeira receita ou despesa.' +
+        '</td></tr>';
+    } else {
+      movementHistory.innerHTML = movements.map(item => {
+        const amount = Number(item.amount || 0);
+        const amountClass = item.movementType === "Receita"
+          ? "positive"
+          : "negative";
+        const sign = item.movementType === "Receita" ? "+" : "−";
+
+        return `
+          <tr>
+            <td>${escapeHTML(item.movementDate || "")}</td>
+            <td>${escapeHTML(item.movementType)}</td>
+            <td>${escapeHTML(item.description)}</td>
+            <td>${escapeHTML(item.category || "Outros")}</td>
+            <td class="${amountClass}">
+              ${sign} ${escapeHTML(formatMT(amount))}
+            </td>
+            <td>
+              <button
+                type="button"
+                class="delete-movement"
+                data-id="${escapeHTML(item.id)}"
+                data-table="${item.tableName}">
+                Eliminar
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    showFinanceStatus("Movimentos actualizados com sucesso.");
+  } catch (error) {
+    showFinanceStatus(
+      "Não foi possível carregar os movimentos: " + getFinanceError(error),
+      true
+    );
+
+    movementHistory.innerHTML =
+      '<tr><td colspan="6" class="finance-empty">' +
+      'Não foi possível carregar o histórico. Verifique as tabelas e as políticas RLS.' +
+      '</td></tr>';
+  }
+}
+
+async function saveMovement(event, tableName, dateColumn, buttonId) {
+  event.preventDefault();
+
+  if (!supabaseClient || !currentFinanceUser) {
+    showFinanceStatus(
+      "A sessão não está activa. Inicie sessão novamente.",
+      true
+    );
+    return;
+  }
+
+  const form = event.currentTarget;
+  const formData = new FormData(form);
+  const description = String(formData.get("description") || "").trim();
+  const category = String(formData.get("category") || "Outros");
+  const amount = Number(formData.get("amount"));
+  const date = String(formData.get("date") || "");
+  const button = document.getElementById(buttonId);
+
+  if (!description || !Number.isFinite(amount) || amount <= 0 || !date) {
+    showFinanceStatus(
+      "Preencha todos os campos obrigatórios com valores válidos.",
+      true
+    );
+    return;
+  }
+
+  const record = {
+    user_id: currentFinanceUser.id,
+    description: description,
+    amount: amount,
+    category: category
+  };
+
+  record[dateColumn] = date;
+
+  if (tableName === "expenses") {
+    record.payment_method =
+      String(formData.get("payment_method") || "Numerário");
+  }
+
+  button.disabled = true;
+  button.textContent = "A guardar...";
+
+  try {
+    const { error } = await supabaseClient
+      .from(tableName)
+      .insert(record);
+
+    if (error) throw error;
+
+    form.reset();
+
+    const dateInput = form.querySelector('input[type="date"]');
+    if (dateInput) dateInput.value = localDateString();
+
+    showFinanceStatus(
+      tableName === "income"
+        ? "Receita guardada com sucesso."
+        : "Despesa guardada com sucesso."
+    );
+
+    await loadFinancialData();
+  } catch (error) {
+    showFinanceStatus(
+      "Não foi possível guardar o movimento: " + getFinanceError(error),
+      true
+    );
+  } finally {
+    button.disabled = false;
+    button.textContent = tableName === "income"
+      ? "Guardar receita"
+      : "Guardar despesa";
+  }
+}
+
+document.getElementById("incomeForm").addEventListener("submit", function(event) {
+  saveMovement(event, "income", "income_date", "saveIncome");
+});
+
+document.getElementById("expenseForm").addEventListener("submit", function(event) {
+  saveMovement(event, "expenses", "expense_date", "saveExpense");
+});
+
+document.getElementById("refreshMovements").addEventListener("click", function() {
+  loadFinancialData();
+});
+
+movementHistory.addEventListener("click", async function(event) {
+  const button = event.target.closest(".delete-movement");
+  if (!button) return;
+
+  if (!supabaseClient || !currentFinanceUser) return;
+
+  const movementId = button.dataset.id;
+  const tableName = button.dataset.table;
+
+  if (!["income", "expenses"].includes(tableName)) return;
+
+  const confirmed = window.confirm(
+    "Tem a certeza de que pretende eliminar este movimento? Esta acção não pode ser desfeita."
+  );
+
+  if (!confirmed) return;
+
+  button.disabled = true;
+
+  try {
+    const { data, error } = await supabaseClient
+      .from(tableName)
+      .delete()
+      .eq("id", movementId)
+      .eq("user_id", currentFinanceUser.id)
+      .select("id");
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      throw new Error(
+        "O movimento não foi eliminado. Verifique as permissões da sua conta."
+      );
+    }
+
+    showFinanceStatus("Movimento eliminado com sucesso.");
+    await loadFinancialData();
+  } catch (error) {
+    showFinanceStatus(
+      "Não foi possível eliminar o movimento: " + getFinanceError(error),
+      true
+    );
+    button.disabled = false;
+  }
+});
     authForm.addEventListener("submit", async function(event) {
       event.preventDefault();
       clearMessage();
