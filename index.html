@@ -1392,6 +1392,98 @@ function showAccount(user) {
       showAuth("reset");
     });
 
+/* =====================================
+   NAVEGAÇÃO DO DASHBOARD FINANCEIRO
+===================================== */
+
+const appSidebar = document.getElementById("appSidebar");
+const sidebarToggle = document.getElementById("sidebarToggle");
+const moduleTitle = document.getElementById("moduleTitle");
+
+const financeModuleNames = {
+  dashboard: "Dashboard",
+  income: "Receitas",
+  expenses: "Despesas",
+  reports: "Relatórios e análises",
+  budget: "Orçamento mensal",
+  savings: "Poupanças e objectivos",
+  debts: "Gestão de dívidas",
+  settings: "Definições"
+};
+
+function showModule(moduleName) {
+  const target = document.getElementById("module-" + moduleName);
+
+  if (!target) return;
+
+  document
+    .querySelectorAll("#accountPage .module-view")
+    .forEach(function (section) {
+      section.classList.toggle("hidden", section !== target);
+    });
+
+  document
+    .querySelectorAll("#accountPage .sidebar-link")
+    .forEach(function (button) {
+      const isActive = button.dataset.module === moduleName;
+
+      button.classList.toggle("active", isActive);
+
+      if (isActive) {
+        button.setAttribute("aria-current", "page");
+      } else {
+        button.removeAttribute("aria-current");
+      }
+    });
+
+  if (moduleTitle) {
+    moduleTitle.textContent =
+      financeModuleNames[moduleName] || "Dashboard";
+  }
+}
+
+/* Recolher e expandir o menu lateral */
+if (sidebarToggle && appSidebar) {
+  sidebarToggle.addEventListener("click", function () {
+    const isCollapsed =
+      appSidebar.classList.toggle("collapsed");
+
+    sidebarToggle.setAttribute(
+      "aria-expanded",
+      String(!isCollapsed)
+    );
+
+    const toggleLabel =
+      sidebarToggle.querySelector(".toggle-label");
+
+    if (toggleLabel) {
+      toggleLabel.textContent = isCollapsed
+        ? "Expandir menu"
+        : "Recolher menu";
+    }
+  });
+}
+
+/* Abrir os módulos pelo menu lateral */
+document
+  .querySelectorAll("#accountPage [data-module]")
+  .forEach(function (button) {
+    button.addEventListener("click", function () {
+      showModule(button.dataset.module);
+    });
+  });
+
+/* Abrir módulos através dos atalhos do dashboard */
+document
+  .querySelectorAll("#accountPage [data-go-module]")
+  .forEach(function (button) {
+    button.addEventListener("click", function () {
+      showModule(button.dataset.goModule);
+    });
+  });
+
+/* Mostrar o dashboard como módulo inicial */
+showModule("dashboard");
 const financeStatus = document.getElementById("financeStatus");
 const movementHistory = document.getElementById("movementHistory");
 
