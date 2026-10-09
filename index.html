@@ -1,0 +1,1127 @@
+
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#102A43">
+  <meta name="description" content="Minhas Finanças — organize os seus rendimentos, despesas, orçamento, dívidas e poupanças.">
+  <title>Minhas Finanças | Gestão Financeira Pessoal</title>
+
+  <style>
+    :root {
+      --navy: #102A43;
+      --blue: #1D4265;
+      --blue-light: #E8F0F8;
+      --background: #F3F6FA;
+      --white: #FFFFFF;
+      --text: #243B53;
+      --muted: #627D98;
+      --border: #D9E2EC;
+      --green: #16805D;
+      --red: #C0394B;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--background);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    button, input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(1120px, 92%);
+      margin: 0 auto;
+    }
+
+    header {
+      background: var(--navy);
+      color: var(--white);
+      padding: 18px 0;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 45px;
+      height: 45px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: #FFFFFF;
+      color: var(--navy);
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .brand h1 {
+      font-size: 21px;
+      line-height: 1.2;
+    }
+
+    .brand p {
+      color: #CBD8E5;
+      font-size: 12px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 11px 17px;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-light {
+      background: var(--white);
+      color: var(--navy);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--white);
+      border-color: #829AB1;
+    }
+
+    .btn-primary {
+      background: var(--navy);
+      color: var(--white);
+    }
+
+    .btn-primary:hover {
+      background: var(--blue);
+    }
+
+    .btn-secondary {
+      background: var(--blue-light);
+      color: var(--navy);
+    }
+
+    .hero {
+      background: var(--navy);
+      color: var(--white);
+      padding: 64px 0 78px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      color: #D5E7F8;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.16);
+      padding: 7px 13px;
+      border-radius: 30px;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+
+    .hero h2 {
+      font-size: clamp(34px, 5vw, 52px);
+      line-height: 1.12;
+      margin-bottom: 20px;
+      letter-spacing: -1.2px;
+    }
+
+    .hero h2 span {
+      color: #AFCBE6;
+    }
+
+    .hero-description {
+      max-width: 550px;
+      color: #D9E2EC;
+      font-size: 17px;
+      margin-bottom: 27px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .trust-note {
+      color: #CBD8E5;
+      font-size: 13px;
+      margin-top: 19px;
+    }
+
+    .preview {
+      background: var(--white);
+      color: var(--text);
+      padding: 24px;
+      border-radius: 18px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+    }
+
+    .preview-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .preview-heading h3 {
+      color: var(--navy);
+      font-size: 18px;
+    }
+
+    .preview-tag {
+      font-size: 11px;
+      padding: 5px 9px;
+      border-radius: 20px;
+      background: #FFF4D6;
+      color: #805B00;
+    }
+
+    .preview-balance {
+      background: var(--navy);
+      color: var(--white);
+      border-radius: 12px;
+      padding: 21px;
+      margin-bottom: 16px;
+    }
+
+    .preview-balance p {
+      font-size: 13px;
+      color: #D9E2EC;
+    }
+
+    .preview-balance h4 {
+      font-size: 29px;
+      margin: 5px 0;
+    }
+
+    .preview-balance small {
+      color: #CBD8E5;
+      font-size: 11px;
+    }
+
+    .preview-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .stat {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .stat-value {
+      font-weight: bold;
+      font-size: 18px;
+      margin-top: 4px;
+    }
+
+    .positive {
+      color: var(--green);
+    }
+
+    .negative {
+      color: var(--red);
+    }
+
+    .section {
+      padding: 65px 0;
+    }
+
+    .section-heading {
+      text-align: center;
+      max-width: 650px;
+      margin: 0 auto 35px;
+    }
+
+    .section-heading h2 {
+      color: var(--navy);
+      font-size: 30px;
+      margin-bottom: 10px;
+    }
+
+    .section-heading p {
+      color: var(--muted);
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 24px;
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: var(--blue-light);
+      font-size: 23px;
+      margin-bottom: 17px;
+    }
+
+    .feature-card h3 {
+      color: var(--navy);
+      font-size: 17px;
+      margin-bottom: 9px;
+    }
+
+    .feature-card p {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .cta {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px;
+      text-align: center;
+    }
+
+    .cta h2 {
+      color: var(--navy);
+      margin-bottom: 10px;
+      font-size: 27px;
+    }
+
+    .cta p {
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    footer {
+      background: var(--navy);
+      color: #CBD8E5;
+      padding: 24px 0;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .auth-section {
+      padding: 55px 0;
+      min-height: 70vh;
+    }
+
+    .auth-card {
+      background: var(--white);
+      width: min(470px, 100%);
+      margin: 0 auto;
+      padding: 30px;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      box-shadow: 0 8px 28px rgba(16,42,67,0.06);
+    }
+
+    .auth-card h2 {
+      color: var(--navy);
+      font-size: 26px;
+      margin-bottom: 5px;
+    }
+
+    .auth-description {
+      color: var(--muted);
+      margin-bottom: 23px;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 17px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: bold;
+      font-size: 13px;
+      margin-bottom: 7px;
+      color: var(--text);
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 13px;
+      border: 1px solid #BCCCDC;
+      border-radius: 8px;
+      outline: none;
+      background: #FFFFFF;
+      color: var(--text);
+    }
+
+    .form-group input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(29,66,101,0.12);
+    }
+
+    .full-width {
+      width: 100%;
+    }
+
+    .auth-links {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+      font-size: 13px;
+    }
+
+    .text-link {
+      color: var(--blue);
+      text-decoration: underline;
+      cursor: pointer;
+      background: none;
+      border: none;
+    }
+
+    .message {
+      display: none;
+      padding: 12px;
+      margin-bottom: 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .message.success {
+      display: block;
+      color: #155B43;
+      background: #E5F5ED;
+      border: 1px solid #B7E4CE;
+    }
+
+    .message.error {
+      display: block;
+      color: #922B35;
+      background: #FCEBED;
+      border: 1px solid #F2C5CB;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .user-panel {
+      padding: 50px 0;
+      min-height: 65vh;
+    }
+
+    .welcome-card {
+      background: var(--navy);
+      color: white;
+      padding: 30px;
+      border-radius: 15px;
+      margin-bottom: 25px;
+    }
+
+    .welcome-card p {
+      color: #D9E2EC;
+    }
+
+    .panel-note {
+      background: white;
+      border: 1px solid var(--border);
+      padding: 25px;
+      border-radius: 12px;
+    }
+
+    @media (max-width: 760px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 35px;
+      }
+
+      .features {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding: 45px 0 55px;
+      }
+
+      .section {
+        padding: 45px 0;
+      }
+
+      .navbar {
+        align-items: flex-start;
+      }
+
+      .nav-actions {
+        gap: 7px;
+      }
+
+      .nav-actions .btn {
+        padding: 9px 10px;
+        font-size: 12px;
+      }
+
+      .brand h1 {
+        font-size: 17px;
+      }
+
+      .brand p {
+        font-size: 10px;
+      }
+
+      .brand-icon {
+        width: 38px;
+        height: 38px;
+      }
+
+      .preview {
+        padding: 17px;
+      }
+
+      .auth-card {
+        padding: 22px;
+      }
+
+      .cta {
+        padding: 25px 18px;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .navbar {
+        flex-direction: column;
+      }
+
+      .nav-actions {
+        width: 100%;
+      }
+
+      .nav-actions .btn {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="container navbar">
+      <a class="brand" href="#" id="brandHome">
+        <div class="brand-icon">M</div>
+        <div>
+          <h1>Minhas Finanças</h1>
+          <p>Organize hoje. Conquiste amanhã.</p>
+        </div>
+      </a>
+
+      <nav class="nav-actions" id="mainNavigation">
+        <button class="btn btn-outline" id="loginNav">Entrar</button>
+        <button class="btn btn-light" id="registerNav">Criar conta</button>
+      </nav>
+
+      <nav class="nav-actions hidden" id="userNavigation">
+        <button class="btn btn-outline" id="logoutButton">Sair</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="homePage">
+      <section class="hero">
+        <div class="container hero-grid">
+          <div>
+            <span class="eyebrow">A sua vida financeira, sob controlo</span>
+            <h2>O seu dinheiro.<br><span>As suas decisões.</span></h2>
+            <p class="hero-description">
+              Tenha uma visão mais clara das suas finanças.
+              Organize rendimentos, acompanhe despesas, planeie
+              o orçamento e trabalhe para alcançar os seus objectivos.
+            </p>
+
+            <div class="hero-actions">
+              <button class="btn btn-light" id="heroRegister">
+                Começar gratuitamente →
+              </button>
+              <button class="btn btn-outline" id="heroLogin">
+                Já tenho uma conta
+              </button>
+            </div>
+
+            <p class="trust-note">
+              Uma ferramenta para ajudar a tomar decisões financeiras mais conscientes.
+            </p>
+          </div>
+
+          <div class="preview">
+            <div class="preview-heading">
+              <h3>Resumo financeiro</h3>
+              <span class="preview-tag">Exemplo ilustrativo</span>
+            </div>
+
+            <div class="preview-balance">
+              <p>Saldo disponível</p>
+              <h4>25.000 MT</h4>
+              <small>Valores demonstrativos, não correspondem à sua conta.</small>
+            </div>
+
+            <div class="preview-stats">
+              <div class="stat">
+                <div class="stat-label">Rendimentos</div>
+                <div class="stat-value positive">+ 40.000 MT</div>
+              </div>
+
+              <div class="stat">
+                <div class="stat-label">Despesas</div>
+                <div class="stat-value negative">− 15.000 MT</div>
+              </div>
+
+              <div class="stat">
+                <div class="stat-label">Poupanças</div>
+                <div class="stat-value">8.000 MT</div>
+              </div>
+
+              <div class="stat">
+                <div class="stat-label">Dívidas</div>
+                <div class="stat-value">5.000 MT</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <div class="section-heading">
+            <h2>Tudo organizado num só lugar</h2>
+            <p>
+              Acompanhe os principais elementos da sua vida financeira
+              com uma estrutura simples e organizada.
+            </p>
+          </div>
+
+          <div class="features">
+            <article class="feature-card">
+              <div class="feature-icon">💰</div>
+              <h3>Rendimentos</h3>
+              <p>Registe salários, negócios e outras fontes de rendimento.</p>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-icon">🧾</div>
+              <h3>Despesas</h3>
+              <p>Registe os seus gastos e compreenda para onde vai o dinheiro.</p>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-icon">📊</div>
+              <h3>Orçamento</h3>
+              <p>Planeie os seus limites de gastos e acompanhe a sua execução.</p>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-icon">🤝</div>
+              <h3>Dívidas</h3>
+              <p>Organize valores devidos, pagamentos e saldos pendentes.</p>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-icon">🎯</div>
+              <h3>Objectivos de poupança</h3>
+              <p>Defina metas financeiras e acompanhe o seu progresso.</p>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-icon">🔐</div>
+              <h3>Acesso pessoal</h3>
+              <p>Utilize uma conta individual para aceder às funcionalidades da plataforma.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <div class="cta">
+            <h2>Comece a organizar as suas finanças</h2>
+            <p>Crie a sua conta e prepare-se para gerir melhor o seu dinheiro.</p>
+            <button class="btn btn-primary" id="bottomRegister">
+              Criar a minha conta
+            </button>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="auth-section hidden" id="authPage">
+      <div class="container">
+        <div class="auth-card">
+          <h2 id="authTitle">Criar conta</h2>
+          <p class="auth-description" id="authDescription">
+            Preencha os campos para começar.
+          </p>
+
+          <div id="formMessage" class="message" role="status" aria-live="polite"></div>
+
+          <form id="authForm">
+            <div class="form-group" id="nameGroup">
+              <label for="fullName">Nome completo</label>
+              <input
+                type="text"
+                id="fullName"
+                name="fullName"
+                placeholder="O seu nome"
+                autocomplete="name"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="email">Endereço de e-mail</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="exemplo@email.com"
+                autocomplete="email"
+                required
+              >
+            </div>
+
+            <div class="form-group" id="passwordGroup">
+              <label for="password">Palavra-passe</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Mínimo de 8 caracteres"
+                minlength="8"
+                autocomplete="new-password"
+                required
+              >
+            </div>
+
+            <button type="submit" class="btn btn-primary full-width" id="submitButton">
+              Criar conta
+            </button>
+          </form>
+
+          <div class="auth-links">
+            <button type="button" class="text-link" id="switchAuth">
+              Já tenho uma conta
+            </button>
+            <button type="button" class="text-link" id="forgotPassword">
+              Esqueci-me da palavra-passe
+            </button>
+          </div>
+
+          <p style="font-size:12px;color:#627D98;margin-top:22px">
+            A confirmação de e-mail pode ser necessária antes de iniciar sessão.
+          </p>
+
+          <button class="text-link" id="backHome" style="margin-top:18px">
+            ← Voltar à página inicial
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="user-panel hidden" id="accountPage">
+      <div class="container">
+        <div class="welcome-card">
+          <h2 id="welcomeTitle">Bem-vindo!</h2>
+          <p>A sua sessão foi iniciada com sucesso.</p>
+        </div>
+
+        <div class="panel-note">
+          <h3 style="color:#102A43;margin-bottom:10px">
+            A sua conta está activa
+          </h3>
+          <p>
+            A autenticação está preparada. O painel completo para registar
+            rendimentos, despesas, orçamentos, dívidas e poupanças será
+            implementado na próxima etapa.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>© <span id="currentYear"></span> Minhas Finanças. Organize hoje. Conquiste amanhã.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    // CONFIGURAÇÃO DO SUPABASE
+    const SUPABASE_URL = "https://bbtnybirxmsxqthgbxmf.supabase.co";
+
+    // Substitua pelo valor da sua chave publishable ou anon.
+    // Nunca coloque aqui a chave service_role.
+    const SUPABASE_PUBLISHABLE_KEY = "COLOQUE_A_SUA_PUBLISHABLE_KEY_AQUI";
+
+    let supabaseClient = null;
+    let authMode = "signup";
+
+    const homePage = document.getElementById("homePage");
+    const authPage = document.getElementById("authPage");
+    const accountPage = document.getElementById("accountPage");
+
+    const authForm = document.getElementById("authForm");
+    const authTitle = document.getElementById("authTitle");
+    const authDescription = document.getElementById("authDescription");
+    const submitButton = document.getElementById("submitButton");
+    const formMessage = document.getElementById("formMessage");
+    const nameGroup = document.getElementById("nameGroup");
+    const passwordGroup = document.getElementById("passwordGroup");
+    const switchAuth = document.getElementById("switchAuth");
+    const forgotPassword = document.getElementById("forgotPassword");
+
+    document.getElementById("currentYear").textContent =
+      new Date().getFullYear();
+
+    function isConfigured() {
+      return window.supabase &&
+        SUPABASE_PUBLISHABLE_KEY !== "COLOQUE_A_SUA_PUBLISHABLE_KEY_AQUI" &&
+        SUPABASE_PUBLISHABLE_KEY.trim().length > 0;
+    }
+
+    if (isConfigured()) {
+      supabaseClient = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY
+      );
+    }
+
+    function showMessage(message, type) {
+      formMessage.textContent = message;
+      formMessage.className = "message " + type;
+    }
+
+    function clearMessage() {
+      formMessage.textContent = "";
+      formMessage.className = "message";
+    }
+
+    function showHome() {
+      homePage.classList.remove("hidden");
+      authPage.classList.add("hidden");
+      accountPage.classList.add("hidden");
+      document.getElementById("mainNavigation").classList.remove("hidden");
+      document.getElementById("userNavigation").classList.add("hidden");
+      window.scrollTo(0, 0);
+    }
+
+    function showAuth(mode) {
+      authMode = mode;
+      homePage.classList.add("hidden");
+      authPage.classList.remove("hidden");
+      accountPage.classList.add("hidden");
+      document.getElementById("mainNavigation").classList.remove("hidden");
+      document.getElementById("userNavigation").classList.add("hidden");
+
+      clearMessage();
+      authForm.reset();
+      passwordGroup.classList.remove("hidden");
+      document.getElementById("password").required = true;
+      document.getElementById("password").autocomplete =
+        mode === "login" ? "current-password" : "new-password";
+
+      if (mode === "signup") {
+        authTitle.textContent = "Criar conta";
+        authDescription.textContent =
+          "Preencha os campos para começar a organizar as suas finanças.";
+        nameGroup.classList.remove("hidden");
+        document.getElementById("fullName").required = true;
+        submitButton.textContent = "Criar conta";
+        switchAuth.textContent = "Já tenho uma conta";
+        forgotPassword.classList.remove("hidden");
+      } else if (mode === "login") {
+        authTitle.textContent = "Iniciar sessão";
+        authDescription.textContent =
+          "Introduza os seus dados para aceder à sua conta.";
+        nameGroup.classList.add("hidden");
+        document.getElementById("fullName").required = false;
+        submitButton.textContent = "Entrar";
+        switchAuth.textContent = "Ainda não tenho conta";
+        forgotPassword.classList.remove("hidden");
+      } else if (mode === "reset") {
+        authTitle.textContent = "Recuperar palavra-passe";
+        authDescription.textContent =
+          "Indique o seu e-mail para receber as instruções de recuperação.";
+        nameGroup.classList.add("hidden");
+        document.getElementById("fullName").required = false;
+        passwordGroup.classList.add("hidden");
+        document.getElementById("password").required = false;
+        submitButton.textContent = "Enviar instruções";
+        switchAuth.textContent = "Voltar ao início de sessão";
+        forgotPassword.classList.add("hidden");
+      }
+
+      window.scrollTo(0, 0);
+    }
+
+    function showAccount(user) {
+      homePage.classList.add("hidden");
+      authPage.classList.add("hidden");
+      accountPage.classList.remove("hidden");
+
+      document.getElementById("mainNavigation").classList.add("hidden");
+      document.getElementById("userNavigation").classList.remove("hidden");
+
+      const metadata = user.user_metadata || {};
+      const displayName = metadata.full_name ||
+        (user.email ? user.email.split("@")[0] : "utilizador");
+
+      document.getElementById("welcomeTitle").textContent =
+        "Bem-vindo, " + displayName + "!";
+
+      window.scrollTo(0, 0);
+    }
+
+    function explainAuthError(error) {
+      if (!error) return "Não foi possível concluir a operação.";
+
+      const message = String(error.message || "").toLowerCase();
+
+      if (message.includes("invalid login credentials")) {
+        return "E-mail ou palavra-passe incorrectos.";
+      }
+
+      if (message.includes("user already registered")) {
+        return "Este e-mail já tem uma conta. Experimente iniciar sessão.";
+      }
+
+      if (message.includes("password should be at least")) {
+        return "A palavra-passe não cumpre o tamanho mínimo exigido.";
+      }
+
+      if (message.includes("email not confirmed")) {
+        return "Confirme o seu e-mail antes de iniciar sessão.";
+      }
+
+      if (message.includes("rate limit")) {
+        return "Foram feitas demasiadas tentativas. Aguarde e tente novamente.";
+      }
+
+      return "Não foi possível concluir a operação. Verifique os dados e tente novamente.";
+    }
+
+    document.getElementById("brandHome").addEventListener("click", function(event) {
+      event.preventDefault();
+      showHome();
+    });
+
+    document.getElementById("loginNav").addEventListener("click", function() {
+      showAuth("login");
+    });
+
+    document.getElementById("registerNav").addEventListener("click", function() {
+      showAuth("signup");
+    });
+
+    document.getElementById("heroRegister").addEventListener("click", function() {
+      showAuth("signup");
+    });
+
+    document.getElementById("heroLogin").addEventListener("click", function() {
+      showAuth("login");
+    });
+
+    document.getElementById("bottomRegister").addEventListener("click", function() {
+      showAuth("signup");
+    });
+
+    document.getElementById("backHome").addEventListener("click", showHome);
+
+    switchAuth.addEventListener("click", function() {
+      if (authMode === "signup") {
+        showAuth("login");
+      } else {
+        showAuth("login");
+      }
+    });
+
+    forgotPassword.addEventListener("click", function() {
+      showAuth("reset");
+    });
+
+    authForm.addEventListener("submit", async function(event) {
+      event.preventDefault();
+      clearMessage();
+
+      if (!isConfigured() || !supabaseClient) {
+        showMessage(
+          "A ligação ao Supabase ainda não está configurada. Adicione a chave publishable ou anon no código e volte a testar.",
+          "error"
+        );
+        return;
+      }
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const fullName = document.getElementById("fullName").value.trim();
+
+      submitButton.disabled = true;
+      submitButton.textContent = "A processar...";
+
+      try {
+        if (authMode === "signup") {
+          const { data, error } = await supabaseClient.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+              data: {
+                full_name: fullName
+              },
+              emailRedirectTo: window.location.origin +
+                window.location.pathname
+            }
+          });
+
+          if (error) throw error;
+
+          if (data.session) {
+            showAccount(data.user);
+          } else {
+            showMessage(
+              "O pedido de registo foi recebido. Se a confirmação de e-mail estiver activada, abra a mensagem recebida para confirmar a conta antes de iniciar sessão.",
+              "success"
+            );
+          }
+        } else if (authMode === "login") {
+          const { data, error } =
+            await supabaseClient.auth.signInWithPassword({
+              email: email,
+              password: password
+            });
+
+          if (error) throw error;
+
+          showAccount(data.user);
+        } else if (authMode === "reset") {
+          const redirectTo = window.location.origin +
+            window.location.pathname + "?recovery=true";
+
+          const { error } =
+            await supabaseClient.auth.resetPasswordForEmail(email, {
+              redirectTo: redirectTo
+            });
+
+          if (error) throw error;
+
+          showMessage(
+            "Se o endereço estiver registado, receberá instruções de recuperação por e-mail. Verifique também a pasta de spam.",
+            "success"
+          );
+        }
+      } catch (error) {
+        showMessage(explainAuthError(error), "error");
+      } finally {
+        submitButton.disabled = false;
+
+        if (authMode === "signup") {
+          submitButton.textContent = "Criar conta";
+        } else if (authMode === "login") {
+          submitButton.textContent = "Entrar";
+        } else {
+          submitButton.textContent = "Enviar instruções";
+        }
+      }
+    });
+
+    document.getElementById("logoutButton").addEventListener("click", async function() {
+      if (!supabaseClient) {
+        showHome();
+        return;
+      }
+
+      const { error } = await supabaseClient.auth.signOut();
+
+      if (error) {
+        alert("Não foi possível terminar a sessão. Tente novamente.");
+        return;
+      }
+
+      showHome();
+    });
+
+    async function checkExistingSession() {
+      if (!supabaseClient) return;
+
+      const { data, error } = await supabaseClient.auth.getSession();
+
+      if (!error && data.session && data.session.user) {
+        showAccount(data.session.user);
+      }
+    }
+
+    if (supabaseClient) {
+      supabaseClient.auth.onAuthStateChange(function(event, session) {
+        if (event === "SIGNED_IN" && session && session.user) {
+          showAccount(session.user);
+        }
+      });
+
+      checkExistingSession();
+    }
+  </script>
+</body>
+</html>
