@@ -511,11 +511,15 @@
 
       renderCategories(expenses);
       setStatus("Relatório actualizado com sucesso.");
-    } catch (error) {
-      console.error("Erro nos relatórios:", error);
-      setStatus(
-        "Não foi possível carregar os dados. Verifique a configuração, a sessão e as permissões do Supabase."
-      );
+   
+} catch (error) {
+  console.error("Erro nos relatórios:", error);
+
+  const detalhe = error && error.message
+    ? error.message
+    : String(error);
+
+  setStatus("Erro ao carregar relatórios: " + detalhe);
     } finally {
       generateButton.disabled = false;
     }
