@@ -1,0 +1,1114 @@
+
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Dívidas | Minhas Finanças</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --primary: #176b55;
+      --primary-dark: #10513f;
+      --background: #f4f7f6;
+      --surface: #ffffff;
+      --text: #20312b;
+      --muted: #687871;
+      --border: #dfe8e3;
+      --danger: #b42318;
+      --success: #167447;
+      --warning: #a15c00;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--background);
+      color: var(--text);
+    }
+
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 22px;
+    }
+
+    .header-content, main {
+      width: min(1200px, 94%);
+      margin: auto;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 26px;
+    }
+
+    header p {
+      margin: 0;
+      opacity: .9;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 15px;
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    main {
+      padding: 24px 0 45px;
+    }
+
+    .notice {
+      display: none;
+      padding: 13px 15px;
+      margin-bottom: 18px;
+      border-radius: 8px;
+      background: #e7f3ed;
+      color: var(--primary-dark);
+      overflow-wrap: anywhere;
+    }
+
+    .notice.error {
+      background: #fdecea;
+      color: var(--danger);
+    }
+
+    .notice.warning {
+      background: #fff2d8;
+      color: var(--warning);
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 15px;
+      margin-bottom: 24px;
+    }
+
+    .card, .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 20px;
+      box-shadow: 0 3px 12px rgba(25, 55, 40, .04);
+      min-width: 0;
+    }
+
+    .card-label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .card-value {
+      font-size: clamp(19px, 2.2vw, 27px);
+      font-weight: bold;
+      overflow-wrap: anywhere;
+    }
+
+    .green { color: var(--success); }
+    .red { color: var(--danger); }
+    .orange { color: var(--warning); }
+
+    .panel {
+      margin-bottom: 22px;
+    }
+
+    .panel h2 {
+      margin: 0 0 18px;
+      font-size: 20px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid #ccd9d1;
+      border-radius: 8px;
+      background: white;
+      color: var(--text);
+      font: inherit;
+      min-width: 0;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 75px;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: 2px solid #b8dfcf;
+      border-color: var(--primary);
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 11px 15px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: wait;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover { background: var(--primary-dark); }
+
+    .btn-secondary {
+      background: #e9efeb;
+      color: var(--text);
+    }
+
+    .btn-danger {
+      background: #fdecea;
+      color: var(--danger);
+    }
+
+    .btn-small {
+      padding: 7px 9px;
+      margin: 2px;
+    }
+
+    .filters {
+      display: flex;
+      align-items: end;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
+    .filters .field {
+      width: min(280px, 100%);
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 850px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    th {
+      background: #f4f8f5;
+      color: #52635a;
+      white-space: nowrap;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 5px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .badge-pending { background: #fff0cf; color: #805000; }
+    .badge-partial { background: #e4efff; color: #194f9b; }
+    .badge-paid { background: #dcf5e6; color: #16643b; }
+    .badge-overdue { background: #fde5e3; color: #a5221a; }
+
+    .empty {
+      padding: 25px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .subheading {
+      margin-top: 25px !important;
+    }
+
+    .small-text {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 20px;
+    }
+
+    @media (max-width: 850px) {
+      .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 520px) {
+      header { padding: 18px 12px; }
+      header h1 { font-size: 22px; }
+      main { width: 94%; padding-top: 16px; }
+      .summary { gap: 9px; }
+      .card, .panel { padding: 14px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .field.full { grid-column: auto; }
+      .card-value { font-size: 19px; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="header-content">
+      <h1>Gestão de Dívidas</h1>
+      <p>Controle o dinheiro que deve e o dinheiro que tem a receber.</p>
+      <a class="back-link" href="../index.html">← Voltar ao painel principal</a>
+    </div>
+  </header>
+
+  <main>
+    <div id="notice" class="notice" role="status"></div>
+
+    <section class="summary">
+      <div class="card">
+        <div class="card-label">Total em dívida a pagar</div>
+        <div class="card-value red" id="totalPayable">0,00 MT</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Total a receber</div>
+        <div class="card-value green" id="totalReceivable">0,00 MT</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Saldo líquido das dívidas</div>
+        <div class="card-value" id="netDebt">0,00 MT</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Dívidas vencidas em aberto</div>
+        <div class="card-value orange" id="overdueCount">0</div>
+      </div>
+    </section>
+
+    <section class="panel" id="debtFormPanel">
+      <h2 id="formTitle">Registar nova dívida</h2>
+
+      <form id="debtForm">
+        <input type="hidden" id="debtId">
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="debtType">Tipo de dívida *</label>
+            <select id="debtType" required>
+              <option value="a_pagar">Dívida a pagar</option>
+              <option value="a_receber">Dívida a receber</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="personName">Credor ou devedor *</label>
+            <input id="personName" type="text" maxlength="150"
+              placeholder="Nome da pessoa ou instituição" required>
+          </div>
+
+          <div class="field">
+            <label for="description">Descrição *</label>
+            <input id="description" type="text" maxlength="200"
+              placeholder="Ex.: empréstimo pessoal" required>
+          </div>
+
+          <div class="field">
+            <label for="initialAmount">Valor inicial (MT) *</label>
+            <input id="initialAmount" type="number" min="0.01"
+              step="0.01" required>
+          </div>
+
+          <div class="field">
+            <label for="debtDate">Data da dívida *</label>
+            <input id="debtDate" type="date" required>
+          </div>
+
+          <div class="field">
+            <label for="dueDate">Prazo de pagamento</label>
+            <input id="dueDate" type="date">
+          </div>
+
+          <div class="field">
+            <label for="interestRate">Juros (%)</label>
+            <input id="interestRate" type="number" min="0"
+              step="0.01" value="0">
+          </div>
+
+          <div class="field">
+            <label for="installmentAmount">Valor da prestação (MT)</label>
+            <input id="installmentAmount" type="number" min="0"
+              step="0.01" value="0">
+          </div>
+
+          <div class="field full">
+            <label for="debtNotes">Observações</label>
+            <textarea id="debtNotes"
+              placeholder="Notas adicionais, condições acordadas, etc."></textarea>
+          </div>
+        </div>
+
+        <p class="small-text">
+          O valor inicial é o montante original da dívida. Os pagamentos registados
+          serão deduzidos ao saldo em aberto. Os juros são informativos e não são
+          acrescentados automaticamente ao saldo.
+        </p>
+
+        <div class="buttons">
+          <button class="btn-primary" type="submit" id="saveDebtButton">
+            Guardar dívida
+          </button>
+          <button class="btn-secondary" type="button" id="cancelEditButton"
+            hidden>
+            Cancelar edição
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Registar pagamento ou recebimento</h2>
+
+      <form id="paymentForm">
+        <div class="form-grid">
+          <div class="field">
+            <label for="paymentDebt">Dívida *</label>
+            <select id="paymentDebt" required>
+              <option value="">Seleccione uma dívida em aberto</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="paymentAmount">Valor do movimento (MT) *</label>
+            <input id="paymentAmount" type="number" min="0.01"
+              step="0.01" required>
+          </div>
+
+          <div class="field">
+            <label for="paymentDate">Data do movimento *</label>
+            <input id="paymentDate" type="date" required>
+          </div>
+
+          <div class="field full">
+            <label for="paymentNotes">Observações do movimento</label>
+            <input id="paymentNotes" type="text" maxlength="250"
+              placeholder="Ex.: primeira prestação">
+          </div>
+        </div>
+
+        <p class="small-text">
+          Para uma dívida a pagar, registe o dinheiro que pagou. Para uma dívida
+          a receber, registe o dinheiro que recebeu. O valor não pode exceder o
+          saldo em aberto.
+        </p>
+
+        <div class="buttons">
+          <button class="btn-primary" type="submit" id="savePaymentButton">
+            Registar movimento
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Lista de dívidas</h2>
+
+      <div class="filters">
+        <div class="field">
+          <label for="typeFilter">Filtrar por tipo</label>
+          <select id="typeFilter">
+            <option value="todas">Todas as dívidas</option>
+            <option value="a_pagar">Dívidas a pagar</option>
+            <option value="a_receber">Dívidas a receber</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="statusFilter">Filtrar por estado</label>
+          <select id="statusFilter">
+            <option value="todos">Todos os estados</option>
+            <option value="pendente">Pendente</option>
+            <option value="parcialmente_pago">Parcialmente pago</option>
+            <option value="liquidado">Liquidado</option>
+            <option value="vencido">Vencido</option>
+          </select>
+        </div>
+
+        <button type="button" class="btn-secondary" id="refreshButton">
+          Actualizar lista
+        </button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Credor/devedor</th>
+              <th>Descrição</th>
+              <th>Valor inicial</th>
+              <th>Saldo em aberto</th>
+              <th>Prazo</th>
+              <th>Estado</th>
+              <th>Acções</th>
+            </tr>
+          </thead>
+          <tbody id="debtsTableBody">
+            <tr><td colspan="8" class="empty">A carregar dívidas...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 class="subheading">Histórico de pagamentos e recebimentos</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Credor/devedor</th>
+              <th>Tipo</th>
+              <th>Valor (MT)</th>
+              <th>Observações</th>
+            </tr>
+          </thead>
+          <tbody id="paymentsTableBody">
+            <tr><td colspan="5" class="empty">A carregar movimentos...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>Minhas Finanças · Gestão de Dívidas</footer>
+
+  <script>
+    "use strict";
+
+    const SUPABASE_URL = "https://bbtnybirxmsxqthgbxmf.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY =
+      "sb_publishable_QMW_RE_Yiej2RMhu9Z67OA_qeK_Pbgi";
+
+    const client = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
+
+    let currentUser = null;
+    let debts = [];
+    let payments = [];
+
+    const $ = (id) => document.getElementById(id);
+
+    function money(value) {
+      return Number(value || 0).toLocaleString("pt-PT", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }) + " MT";
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[char]);
+    }
+
+    function today() {
+      const now = new Date();
+      const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+      return local.toISOString().slice(0, 10);
+    }
+
+    function showNotice(message, type = "success") {
+      const box = $("notice");
+      box.textContent = message;
+      box.className = "notice" +
+        (type === "error" ? " error" : type === "warning" ? " warning" : "");
+      box.style.display = "block";
+      box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    function hideNotice() {
+      $("notice").style.display = "none";
+    }
+
+    function getDebtStatus(debt) {
+      const balance = Number(debt.outstanding_balance || 0);
+
+      if (balance <= 0) return "liquidado";
+
+      if (debt.due_date && debt.due_date < today()) {
+        return "vencido";
+      }
+
+      if (balance < Number(debt.initial_amount || 0)) {
+        return "parcialmente_pago";
+      }
+
+      return "pendente";
+    }
+
+    function statusLabel(status) {
+      return {
+        pendente: "Pendente",
+        parcialmente_pago: "Parcialmente pago",
+        liquidado: "Liquidado",
+        vencido: "Vencido"
+      }[status] || status;
+    }
+
+    function statusBadge(status) {
+      const css = {
+        pendente: "badge-pending",
+        parcialmente_pago: "badge-partial",
+        liquidado: "badge-paid",
+        vencido: "badge-overdue"
+      }[status] || "badge-pending";
+
+      return `<span class="badge ${css}">${statusLabel(status)}</span>`;
+    }
+
+    function typeLabel(type) {
+      return type === "a_receber" ? "A receber" : "A pagar";
+    }
+
+    async function loadData() {
+      hideNotice();
+
+      const [debtsResult, paymentsResult] = await Promise.all([
+        client.from("debts").select("*")
+          .eq("user_id", currentUser.id)
+          .order("created_at", { ascending: false }),
+
+        client.from("debt_payments").select("*")
+          .eq("user_id", currentUser.id)
+          .order("payment_date", { ascending: false })
+          .order("created_at", { ascending: false })
+      ]);
+
+      if (debtsResult.error) throw debtsResult.error;
+      if (paymentsResult.error) throw paymentsResult.error;
+
+      debts = debtsResult.data || [];
+      payments = paymentsResult.data || [];
+
+      renderSummary();
+      renderDebts();
+      renderPayments();
+      renderPaymentOptions();
+    }
+
+    function renderSummary() {
+      const openDebts = debts.filter(
+        debt => Number(debt.outstanding_balance || 0) > 0
+      );
+
+      const payable = openDebts
+        .filter(debt => debt.debt_type === "a_pagar")
+        .reduce((sum, debt) => sum + Number(debt.outstanding_balance || 0), 0);
+
+      const receivable = openDebts
+        .filter(debt => debt.debt_type === "a_receber")
+        .reduce((sum, debt) => sum + Number(debt.outstanding_balance || 0), 0);
+
+      const overdue = openDebts.filter(
+        debt => debt.due_date && debt.due_date < today()
+      ).length;
+
+      $("totalPayable").textContent = money(payable);
+      $("totalReceivable").textContent = money(receivable);
+      $("netDebt").textContent = money(payable - receivable);
+      $("netDebt").className =
+        "card-value " + (payable - receivable > 0 ? "red" : "green");
+      $("overdueCount").textContent = overdue;
+    }
+
+    function renderDebts() {
+      const typeFilter = $("typeFilter").value;
+      const statusFilter = $("statusFilter").value;
+
+      const filtered = debts.filter(debt => {
+        const status = getDebtStatus(debt);
+        const matchesType =
+          typeFilter === "todas" || debt.debt_type === typeFilter;
+        const matchesStatus =
+          statusFilter === "todos" || status === statusFilter;
+
+        return matchesType && matchesStatus;
+      });
+
+      const body = $("debtsTableBody");
+
+      if (!filtered.length) {
+        body.innerHTML =
+          '<tr><td colspan="8" class="empty">Não existem dívidas para apresentar com estes filtros.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = filtered.map(debt => {
+        const balance = Number(debt.outstanding_balance || 0);
+
+        return `
+          <tr>
+            <td>${typeLabel(debt.debt_type)}</td>
+            <td>${escapeHtml(debt.person_name || debt.creditor || "—")}</td>
+            <td>${escapeHtml(debt.description || "—")}</td>
+            <td>${money(debt.initial_amount)}</td>
+            <td><strong>${money(balance)}</strong></td>
+            <td>${escapeHtml(debt.due_date || "—")}</td>
+            <td>${statusBadge(getDebtStatus(debt))}</td>
+            <td>
+              <button class="btn-secondary btn-small"
+                data-action="edit" data-id="${debt.id}">Editar</button>
+              <button class="btn-secondary btn-small"
+                data-action="history" data-id="${debt.id}">Histórico</button>
+              <button class="btn-danger btn-small"
+                data-action="delete" data-id="${debt.id}">Eliminar</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderPayments(highlightDebtId = null) {
+      let displayed = payments;
+
+      if (highlightDebtId) {
+        displayed = payments.filter(
+          payment => payment.debt_id === highlightDebtId
+        );
+      }
+
+      const body = $("paymentsTableBody");
+
+      if (!displayed.length) {
+        body.innerHTML =
+          '<tr><td colspan="5" class="empty">Ainda não existem movimentos registados.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = displayed.map(payment => {
+        const debt = debts.find(item => item.id === payment.debt_id);
+
+        return `
+          <tr>
+            <td>${escapeHtml(payment.payment_date || "—")}</td>
+            <td>${escapeHtml(
+              debt ? (debt.person_name || debt.creditor || "—") : "—"
+            )}</td>
+            <td>${debt ? typeLabel(debt.debt_type) : "—"}</td>
+            <td>${money(payment.amount)}</td>
+            <td>${escapeHtml(payment.notes || "—")}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderPaymentOptions() {
+      const select = $("paymentDebt");
+      const previous = select.value;
+
+      const openDebts = debts.filter(
+        debt => Number(debt.outstanding_balance || 0) > 0
+      );
+
+      select.innerHTML =
+        '<option value="">Seleccione uma dívida em aberto</option>' +
+        openDebts.map(debt => `
+          <option value="${debt.id}">
+            ${escapeHtml(typeLabel(debt.debt_type))} — 
+            ${escapeHtml(debt.person_name || debt.creditor || "")} — 
+            ${money(debt.outstanding_balance)}
+          </option>
+        `).join("");
+
+      if (openDebts.some(debt => debt.id === previous)) {
+        select.value = previous;
+      }
+    }
+
+    function resetDebtForm() {
+      $("debtForm").reset();
+      $("debtId").value = "";
+      $("debtType").value = "a_pagar";
+      $("debtDate").value = today();
+      $("interestRate").value = "0";
+      $("installmentAmount").value = "0";
+      $("formTitle").textContent = "Registar nova dívida";
+      $("saveDebtButton").textContent = "Guardar dívida";
+      $("cancelEditButton").hidden = true;
+    }
+
+    function startEdit(id) {
+      const debt = debts.find(item => item.id === id);
+      if (!debt) return;
+
+      $("debtId").value = debt.id;
+      $("debtType").value = debt.debt_type || "a_pagar";
+      $("personName").value = debt.person_name || debt.creditor || "";
+      $("description").value = debt.description || "";
+      $("initialAmount").value = debt.initial_amount ?? "";
+      $("debtDate").value = debt.debt_date || today();
+      $("dueDate").value = debt.due_date || "";
+      $("interestRate").value = debt.interest_rate ?? 0;
+      $("installmentAmount").value = debt.installment_amount ?? 0;
+      $("debtNotes").value = debt.notes || "";
+
+      $("formTitle").textContent = "Editar dívida";
+      $("saveDebtButton").textContent = "Guardar alterações";
+      $("cancelEditButton").hidden = false;
+
+      $("debtFormPanel").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }
+
+    async function saveDebt(event) {
+      event.preventDefault();
+      hideNotice();
+
+      const id = $("debtId").value;
+      const initialAmount = Number($("initialAmount").value);
+      const interestRate = Number($("interestRate").value || 0);
+      const installmentAmount = Number($("installmentAmount").value || 0);
+
+      if (!Number.isFinite(initialAmount) || initialAmount <= 0) {
+        showNotice("Introduza um valor inicial superior a zero.", "error");
+        return;
+      }
+
+      if (interestRate < 0 || installmentAmount < 0) {
+        showNotice("Os juros e a prestação não podem ser negativos.", "error");
+        return;
+      }
+
+      const personName = $("personName").value.trim();
+      const existing = id ? debts.find(debt => debt.id === id) : null;
+
+      if (existing && initialAmount < Number(existing.initial_amount)) {
+        const alreadyPaid =
+          Number(existing.initial_amount) -
+          Number(existing.outstanding_balance);
+
+        if (initialAmount < alreadyPaid) {
+          showNotice(
+            "O valor inicial não pode ser inferior ao montante já pago ou recebido.",
+            "error"
+          );
+          return;
+        }
+      }
+
+      const data = {
+        user_id: currentUser.id,
+        debt_type: $("debtType").value,
+        person_name: personName,
+        creditor: personName,
+        description: $("description").value.trim(),
+        initial_amount: initialAmount,
+        debt_date: $("debtDate").value,
+        due_date: $("dueDate").value || null,
+        interest_rate: interestRate,
+        installment_amount: installmentAmount,
+        notes: $("debtNotes").value.trim() || null
+      };
+
+      if (existing) {
+        const paid = Number(existing.initial_amount) -
+          Number(existing.outstanding_balance);
+
+        data.outstanding_balance = Math.max(0, initialAmount - paid);
+        data.status = data.outstanding_balance <= 0
+          ? "liquidado"
+          : paid > 0 ? "parcialmente_pago" : "pendente";
+        data.updated_at = new Date().toISOString();
+      } else {
+        data.outstanding_balance = initialAmount;
+        data.status = "pendente";
+      }
+
+      const button = $("saveDebtButton");
+      button.disabled = true;
+
+      try {
+        let result;
+
+        if (existing) {
+          result = await client.from("debts")
+            .update(data)
+            .eq("id", id)
+            .eq("user_id", currentUser.id);
+        } else {
+          result = await client.from("debts").insert(data);
+        }
+
+        if (result.error) throw result.error;
+
+        resetDebtForm();
+        await loadData();
+        showNotice(existing
+          ? "Dívida actualizada com sucesso."
+          : "Dívida registada com sucesso.");
+      } catch (error) {
+        console.error(error);
+        showNotice("Não foi possível guardar a dívida: " + error.message, "error");
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function savePayment(event) {
+      event.preventDefault();
+      hideNotice();
+
+      const debtId = $("paymentDebt").value;
+      const amount = Number($("paymentAmount").value);
+      const paymentDate = $("paymentDate").value;
+      const debt = debts.find(item => item.id === debtId);
+
+      if (!debt) {
+        showNotice("Seleccione uma dívida válida.", "error");
+        return;
+      }
+
+      const balance = Number(debt.outstanding_balance || 0);
+
+      if (!Number.isFinite(amount) || amount <= 0) {
+        showNotice("Introduza um valor superior a zero.", "error");
+        return;
+      }
+
+      if (amount > balance) {
+        showNotice(
+          "O movimento não pode exceder o saldo em aberto de " +
+          money(balance) + ".",
+          "error"
+        );
+        return;
+      }
+
+      const button = $("savePaymentButton");
+      button.disabled = true;
+
+      try {
+        const remaining = Math.max(0, balance - amount);
+        const paidTotal = Number(debt.initial_amount) - remaining;
+
+        const paymentResult = await client.from("debt_payments").insert({
+          user_id: currentUser.id,
+          debt_id: debt.id,
+          amount,
+          payment_date: paymentDate,
+          notes: $("paymentNotes").value.trim() || null
+        });
+
+        if (paymentResult.error) throw paymentResult.error;
+
+        const status = remaining <= 0
+          ? "liquidado"
+          : paidTotal > 0 ? "parcialmente_pago" : "pendente";
+
+        const debtResult = await client.from("debts")
+          .update({
+            outstanding_balance: remaining,
+            status,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", debt.id)
+          .eq("user_id", currentUser.id);
+
+        if (debtResult.error) {
+          showNotice(
+            "O movimento foi registado, mas não foi possível actualizar o saldo. " +
+            "Não volte a registar o mesmo pagamento. Actualize a página e verifique a dívida.",
+            "warning"
+          );
+          await loadData();
+          return;
+        }
+
+        $("paymentForm").reset();
+        $("paymentDate").value = today();
+
+        await loadData();
+        showNotice(
+          debt.debt_type === "a_pagar"
+            ? "Pagamento registado com sucesso."
+            : "Recebimento registado com sucesso."
+        );
+      } catch (error) {
+        console.error(error);
+        showNotice("Não foi possível registar o movimento: " + error.message, "error");
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function deleteDebt(id) {
+      const debt = debts.find(item => item.id === id);
+      if (!debt) return;
+
+      const confirmed = confirm(
+        "Tem a certeza de que pretende eliminar a dívida de " +
+        (debt.person_name || debt.creditor) + "?\n\n" +
+        "O histórico de pagamentos associado também será eliminado. Esta acção não pode ser desfeita."
+      );
+
+      if (!confirmed) return;
+
+      try {
+        const { error } = await client.from("debts")
+          .delete()
+          .eq("id", id)
+          .eq("user_id", currentUser.id);
+
+        if (error) throw error;
+
+        await loadData();
+        showNotice("Dívida eliminada com sucesso.");
+      } catch (error) {
+        console.error(error);
+        showNotice("Não foi possível eliminar a dívida: " + error.message, "error");
+      }
+    }
+
+    $("debtForm").addEventListener("submit", saveDebt);
+    $("paymentForm").addEventListener("submit", savePayment);
+
+    $("cancelEditButton").addEventListener("click", resetDebtForm);
+    $("refreshButton").addEventListener("click", async () => {
+      try {
+        await loadData();
+        showNotice("Lista actualizada.");
+      } catch (error) {
+        showNotice("Erro ao actualizar: " + error.message, "error");
+      }
+    });
+
+    $("typeFilter").addEventListener("change", renderDebts);
+    $("statusFilter").addEventListener("change", renderDebts);
+
+    $("debtsTableBody").addEventListener("click", async event => {
+      const button = event.target.closest("button[data-action]");
+      if (!button) return;
+
+      const { action, id } = button.dataset;
+
+      if (action === "edit") startEdit(id);
+      if (action === "delete") await deleteDebt(id);
+
+      if (action === "history") {
+        const debt = debts.find(item => item.id === id);
+        renderPayments(id);
+        document.querySelector(".subheading").scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+
+        if (debt) {
+          showNotice(
+            "A mostrar os movimentos de: " +
+            (debt.person_name || debt.creditor) + ". " +
+            "Para voltar a ver todos os movimentos, actualize a lista."
+          );
+        }
+      }
+    });
+
+    async function init() {
+      $("debtDate").value = today();
+      $("paymentDate").value = today();
+
+      if (!window.supabase || !window.supabase.createClient) {
+        showNotice(
+          "Não foi possível carregar a biblioteca Supabase. Verifique a ligação à Internet.",
+          "error"
+        );
+        return;
+      }
+
+      try {
+        const { data, error } = await client.auth.getSession();
+        if (error) throw error;
+
+        currentUser = data.session?.user || null;
+
+        if (!currentUser) {
+          showNotice(
+            "Não existe uma sessão activa. Entre primeiro na sua conta no painel principal e volte a esta página.",
+            "error"
+          );
+          $("debtsTableBody").innerHTML =
+            '<tr><td colspan="8" class="empty">Inicie sessão para consultar as dívidas.</td></tr>';
+          $("paymentsTableBody").innerHTML =
+            '<tr><td colspan="5" class="empty">Inicie sessão para consultar os movimentos.</td></tr>';
+          return;
+        }
+
+        await loadData();
+      } catch (error) {
+        console.error(error);
+        showNotice(
+          "Não foi possível carregar os dados. Verifique a ligação, a sessão e as políticas do Supabase. Detalhe: " +
+          error.message,
+          "error"
+        );
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
