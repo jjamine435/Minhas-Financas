@@ -1217,16 +1217,16 @@
     document.getElementById("currentYear").textContent = new Date().getFullYear();
 
     // Corrigido: não compara a chave com ela própria.
-    function isConfigured() {
-      return Boolean(
-        window.supabase &&
-        typeof window.supabase.createClient === "function" &&
-        SUPABASE_URL.startsWith("https://") &&
-        SUPABASE_PUBLISHABLE_KEY.trim().length > 0 &&
-        !SUPABASE_PUBLISHABLE_KEY.includes("COLOQUE_A_SUA") &&
-        !SUPABASE_PUBLISHABLE_KEY.includes("A_TUA_CHAVE_PUBLICA_REAL")
-      );
-    }
+   
+function isConfigured() {
+  return Boolean(
+    window.supabase &&
+    typeof window.supabase.createClient === "function" &&
+    SUPABASE_URL.startsWith("https://") &&
+    SUPABASE_PUBLISHABLE_KEY.trim().length > 0
+  );
+}
+
 
     if (isConfigured()) {
       try {
@@ -1417,6 +1417,11 @@ function showModule(moduleName) {
     window.location.href = "frontend/relatorios.html";
     return;
   }
+
+if (moduleName === "budget") {
+  window.location.href = "frontend/orcamento.html";
+  return;
+}
 
   const target = document.getElementById("module-" + moduleName);
 
