@@ -1,0 +1,523 @@
+
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orçamento | Minhas-Finanças</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f3f6fb;
+      color: #172033;
+    }
+    header {
+      background: #10213d;
+      color: white;
+      padding: 22px 5%;
+    }
+    header h1 { margin: 0 0 8px; font-size: 25px; }
+    header p { margin: 0; color: #d5deed; }
+    main { max-width: 1100px; margin: 25px auto; padding: 0 16px; }
+    .back {
+      display: inline-block;
+      margin-bottom: 20px;
+      color: #174ea6;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .panel {
+      background: white;
+      padding: 22px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 3px 12px #10213d0d;
+    }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .metric {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      border-left: 4px solid #2459a9;
+      box-shadow: 0 3px 12px #10213d0d;
+    }
+    .metric span { color: #667085; font-size: 14px; }
+    .metric strong { display: block; font-size: 23px; margin-top: 10px; }
+    .filters, .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 15px;
+      align-items: end;
+    }
+    label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 7px; }
+    input, select {
+      width: 100%;
+      padding: 11px;
+      border: 1px solid #ccd4e0;
+      border-radius: 7px;
+      font-size: 15px;
+      background: white;
+    }
+    button {
+      border: 0;
+      border-radius: 7px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .primary { background: #174ea6; color: white; }
+    .secondary { background: #e7edf6; color: #172033; }
+    .danger { background: #fde8e7; color: #a32020; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .message { margin: 12px 0; font-size: 14px; }
+    .error { color: #b42318; }
+    .success { color: #087443; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 650px; }
+    th, td { padding: 13px 10px; border-bottom: 1px solid #e7ebf1; text-align: left; }
+    th { background: #f7f9fc; font-size: 13px; }
+    .bar { background: #e8edf5; height: 8px; border-radius: 10px; margin-top: 7px; overflow: hidden; }
+    .bar span { display: block; height: 100%; background: #2459a9; }
+    .over { color: #b42318; }
+    .muted { color: #667085; font-size: 13px; }
+    @media (max-width: 600px) {
+      header { padding: 20px 16px; }
+      .panel { padding: 16px; }
+      .metric strong { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Planeamento do Orçamento</h1>
+  <p>Planeia as despesas do mês e acompanha os teus limites financeiros.</p>
+</header>
+
+<main>
+  <a class="back" href="../index.html">← Voltar ao Dashboard</a>
+
+  <section class="panel">
+    <h2>Orçamento mensal</h2>
+    <div class="filters">
+      <div>
+        <label for="month">Mês de análise</label>
+        <input type="month" id="month" required>
+      </div>
+      <div>
+        <button class="primary" id="refreshBtn" type="button">Atualizar dados</button>
+      </div>
+    </div>
+    <p id="status" class="message" role="status">A verificar a sessão...</p>
+  </section>
+
+  <section class="summary">
+    <div class="metric">
+      <span>Orçamento total</span>
+      <strong id="totalBudget">0,00 MT</strong>
+    </div>
+    <div class="metric">
+      <span>Despesas realizadas</span>
+      <strong id="totalSpent">0,00 MT</strong>
+    </div>
+    <div class="metric">
+      <span>Saldo disponível</span>
+      <strong id="totalRemaining">0,00 MT</strong>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2 id="formTitle">Definir orçamento por categoria</h2>
+    <form id="budgetForm">
+      <div class="form-grid">
+        <div>
+          <label for="category">Categoria</label>
+          <select id="category" required>
+            <option value="">Selecionar categoria</option>
+            <option>Alimentação</option>
+            <option>Transporte</option>
+            <option>Habitação / Renda</option>
+            <option>Água e electricidade</option>
+            <option>Saúde</option>
+            <option>Educação</option>
+            <option>Comunicação / Internet</option>
+            <option>Vestuário</option>
+            <option>Lazer</option>
+            <option>Família</option>
+            <option>Outros</option>
+          </select>
+        </div>
+        <div>
+          <label for="amount">Limite mensal (MT)</label>
+          <input type="number" id="amount" min="0.01" step="0.01"
+                 placeholder="Ex.: 5000" required>
+        </div>
+        <div>
+          <button class="primary" id="saveBtn" type="submit">Guardar orçamento</button>
+          <button class="secondary" id="cancelBtn" type="button" hidden>Cancelar edição</button>
+        </div>
+      </div>
+    </form>
+    <p class="muted">Cada categoria pode ter um único orçamento por mês. Guardar novamente a mesma categoria actualiza o valor.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Resumo por categoria</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Categoria</th>
+            <th>Orçamento</th>
+            <th>Despesas</th>
+            <th>Disponível</th>
+            <th>Utilização</th>
+            <th>Acções</th>
+          </tr>
+        </thead>
+        <tbody id="budgetRows">
+          <tr><td colspan="6">A carregar...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+  // Usa a mesma URL e a mesma chave PUBLICÁVEL do Supabase
+  // que já estão configuradas no teu index.html.
+  // Nunca coloques aqui a chave secret/service_role.
+  const SUPABASE_URL = "https://bbtnybirxmsxqthgbxmf.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_QMW_RE_Yiej2RMhu9Z67OA_qeK_Pbgi";
+
+  const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
+
+  const $ = id => document.getElementById(id);
+  let currentUser = null;
+  let budgets = [];
+  let expenses = [];
+  let editingId = null;
+  let busy = false;
+
+  const money = value => new Intl.NumberFormat("pt-MZ", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(Number(value) || 0) + " MT";
+
+  function showStatus(message, type = "") {
+    $("status").textContent = message;
+    $("status").className = "message " + type;
+  }
+
+  function selectedMonth() {
+    return $("month").value;
+  }
+
+  function monthBounds(month) {
+    const [year, mon] = month.split("-").map(Number);
+    const start = `${month}-01`;
+    const next = new Date(Date.UTC(year, mon, 1))
+      .toISOString().slice(0, 10);
+    return { start, next };
+  }
+
+  function setBusy(value) {
+    busy = value;
+    $("saveBtn").disabled = value;
+    $("refreshBtn").disabled = value;
+  }
+
+  async function loadData() {
+    if (!currentUser || busy) return;
+
+    const month = selectedMonth();
+    if (!month) {
+      showStatus("Selecciona o mês que pretendes analisar.", "error");
+      return;
+    }
+
+    setBusy(true);
+    showStatus("A carregar o orçamento e as despesas...");
+
+    try {
+      const { start, next } = monthBounds(month);
+
+      const [budgetResult, expenseResult] = await Promise.all([
+        supabaseClient
+          .from("budgets")
+          .select("id, category, amount, month")
+          .eq("user_id", currentUser.id)
+          .eq("month", start)
+          .order("category"),
+
+        supabaseClient
+          .from("expenses")
+          .select("category, amount, expense_date")
+          .eq("user_id", currentUser.id)
+          .gte("expense_date", start)
+          .lt("expense_date", next)
+      ]);
+
+      if (budgetResult.error) throw budgetResult.error;
+      if (expenseResult.error) throw expenseResult.error;
+
+      budgets = budgetResult.data || [];
+      expenses = expenseResult.data || [];
+      render();
+      showStatus("Dados actualizados com sucesso.", "success");
+    } catch (error) {
+      console.error(error);
+      showStatus(
+        "Não foi possível carregar os dados. Verifica a tabela, as políticas RLS e a ligação ao Supabase. " +
+        (error.message || ""),
+        "error"
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function render() {
+    const spentByCategory = {};
+
+    expenses.forEach(item => {
+      const category = item.category || "Sem categoria";
+      spentByCategory[category] =
+        (spentByCategory[category] || 0) + Number(item.amount || 0);
+    });
+
+    const budgetTotal = budgets.reduce(
+      (sum, item) => sum + Number(item.amount || 0), 0
+    );
+    const spentTotal = expenses.reduce(
+      (sum, item) => sum + Number(item.amount || 0), 0
+    );
+
+    $("totalBudget").textContent = money(budgetTotal);
+    $("totalSpent").textContent = money(spentTotal);
+
+    const remaining = budgetTotal - spentTotal;
+    $("totalRemaining").textContent = money(remaining);
+    $("totalRemaining").classList.toggle("over", remaining < 0);
+
+    const categories = new Set([
+      ...budgets.map(item => item.category),
+      ...Object.keys(spentByCategory)
+    ]);
+
+    const rows = [...categories].sort((a, b) => a.localeCompare(b, "pt"))
+      .map(category => {
+        const budget = budgets.find(item => item.category === category);
+        const limit = Number(budget?.amount || 0);
+        const spent = Number(spentByCategory[category] || 0);
+        const balance = limit - spent;
+        const percent = limit > 0 ? (spent / limit) * 100 : (spent > 0 ? 100 : 0);
+        const width = Math.min(percent, 100);
+
+        return `
+          <tr>
+            <td>${escapeHtml(category)}</td>
+            <td>${money(limit)}</td>
+            <td>${money(spent)}</td>
+            <td class="${balance < 0 ? "over" : ""}">${money(balance)}</td>
+            <td>
+              ${percent.toFixed(1)}%
+              <div class="bar"><span style="width:${width}%"></span></div>
+            </td>
+            <td>
+              <div class="actions">
+                ${budget ? `
+                  <button class="secondary" type="button"
+                    data-edit="${budget.id}">Editar</button>
+                  <button class="danger" type="button"
+                    data-delete="${budget.id}">Eliminar</button>
+                ` : `<span class="muted">Sem orçamento</span>`}
+              </div>
+            </td>
+          </tr>`;
+      });
+
+    $("budgetRows").innerHTML = rows.length
+      ? rows.join("")
+      : '<tr><td colspan="6">Ainda não existem dados para este mês.</td></tr>';
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    })[char]);
+  }
+
+  function resetForm() {
+    editingId = null;
+    $("budgetForm").reset();
+    $("formTitle").textContent = "Definir orçamento por categoria";
+    $("saveBtn").textContent = "Guardar orçamento";
+    $("cancelBtn").hidden = true;
+    $("category").disabled = false;
+  }
+
+  $("budgetForm").addEventListener("submit", async event => {
+    event.preventDefault();
+    if (!currentUser || busy) return;
+
+    const category = $("category").value;
+    const amount = Number($("amount").value);
+    const month = selectedMonth();
+
+    if (!category || !month || !Number.isFinite(amount) || amount <= 0) {
+      showStatus("Preenche a categoria, o mês e um valor superior a zero.", "error");
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const record = {
+        user_id: currentUser.id,
+        category,
+        amount,
+        month: `${month}-01`
+      };
+
+      let result;
+
+      if (editingId) {
+        result = await supabaseClient
+          .from("budgets")
+          .update({ amount })
+          .eq("id", editingId)
+          .eq("user_id", currentUser.id);
+      } else {
+        result = await supabaseClient
+          .from("budgets")
+          .upsert(record, { onConflict: "user_id,category,month" });
+      }
+
+      if (result.error) throw result.error;
+
+      resetForm();
+      showStatus("Orçamento guardado com sucesso.", "success");
+      await loadData();
+    } catch (error) {
+      console.error(error);
+      showStatus(
+        "Erro ao guardar. Verifica a ligação e as permissões do Supabase. " +
+        (error.message || ""),
+        "error"
+      );
+    } finally {
+      setBusy(false);
+    }
+  });
+
+  $("cancelBtn").addEventListener("click", resetForm);
+
+  $("budgetRows").addEventListener("click", async event => {
+    const editButton = event.target.closest("[data-edit]");
+    const deleteButton = event.target.closest("[data-delete]");
+
+    if (editButton) {
+      const budget = budgets.find(item => item.id === editButton.dataset.edit);
+      if (!budget) return;
+
+      editingId = budget.id;
+      $("category").value = budget.category;
+      $("category").disabled = true;
+      $("amount").value = budget.amount;
+      $("formTitle").textContent = "Editar orçamento";
+      $("saveBtn").textContent = "Guardar alterações";
+      $("cancelBtn").hidden = false;
+      $("budgetForm").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    if (deleteButton) {
+      if (busy) return;
+      const id = deleteButton.dataset.delete;
+      const budget = budgets.find(item => item.id === id);
+      if (!budget) return;
+
+      if (!confirm(`Eliminar o orçamento de ${budget.category} deste mês?`)) return;
+
+      setBusy(true);
+      try {
+        const { error } = await supabaseClient
+          .from("budgets")
+          .delete()
+          .eq("id", id)
+          .eq("user_id", currentUser.id);
+
+        if (error) throw error;
+
+        if (editingId === id) resetForm();
+        showStatus("Orçamento eliminado.", "success");
+        await loadData();
+      } catch (error) {
+        console.error(error);
+        showStatus("Não foi possível eliminar: " + (error.message || ""), "error");
+      } finally {
+        setBusy(false);
+      }
+    }
+  });
+
+  $("refreshBtn").addEventListener("click", loadData);
+  $("month").addEventListener("change", () => {
+    resetForm();
+    loadData();
+  });
+
+  async function initialise() {
+    const now = new Date();
+    $("month").value =
+      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+    if (SUPABASE_PUBLISHABLE_KEY === "COLOCA_AQUI_A_CHAVE_PUBLICAVEL") {
+      showStatus("Falta configurar a chave publicável do Supabase neste ficheiro.", "error");
+      return;
+    }
+
+    const { data, error } = await supabaseClient.auth.getSession();
+
+    if (error) {
+      showStatus("Erro ao verificar a sessão do utilizador.", "error");
+      return;
+    }
+
+    if (!data.session) {
+      showStatus("Inicia sessão na plataforma para gerir o teu orçamento.", "error");
+      return;
+    }
+
+    currentUser = data.session.user;
+    await loadData();
+  }
+
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_OUT") {
+      currentUser = null;
+      showStatus("A sessão terminou. Volta a entrar na plataforma.", "error");
+    } else if (event === "SIGNED_IN" && session?.user) {
+      currentUser = session.user;
+      loadData();
+    }
+  });
+
+  initialise();
+</script>
+</body>
+</html>
