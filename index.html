@@ -1411,7 +1411,13 @@ const financeModuleNames = {
   settings: "Definições"
 };
 
+
 function showModule(moduleName) {
+  if (moduleName === "reports") {
+    window.location.href = "frontend/relatorios.html";
+    return;
+  }
+
   const target = document.getElementById("module-" + moduleName);
 
   if (!target) return;
