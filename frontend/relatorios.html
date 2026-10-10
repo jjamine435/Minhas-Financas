@@ -4,872 +4,670 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Relatórios mensais de receitas, despesas, saldo e gráficos financeiros.">
-  <title>Relatórios Financeiros | Minhas-Financas</title>
+  <title>Relatórios Financeiros</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; }
 
     body {
-      font-family: Arial, Helvetica, sans-serif;
-      background: #F4F7FB;
-      color: #102A43;
-      line-height: 1.6;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      color: #243047;
     }
 
     header {
-      background: #102A43;
+      background: #17365d;
       color: white;
-      padding: 18px 24px;
-    }
-
-    .container {
-      width: min(1100px, 92%);
-      margin: 28px auto;
-    }
-
-    .back-link {
-      display: inline-block;
-      color: #1769AA;
-      text-decoration: none;
-      margin-bottom: 18px;
-      font-weight: bold;
-    }
-
-    .intro {
-      margin-bottom: 24px;
-    }
-
-    .intro h1 {
-      font-size: clamp(24px, 4vw, 32px);
-      margin-bottom: 8px;
-    }
-
-    .panel, .finance-card {
-      background: white;
-      border: 1px solid #D9E2EC;
-      border-radius: 12px;
       padding: 22px;
-      box-shadow: 0 3px 12px rgba(16, 42, 67, 0.04);
+    }
+
+    header h1 { margin: 0 0 8px; }
+
+    main {
+      max-width: 1100px;
+      margin: 25px auto;
+      padding: 0 16px;
     }
 
     .panel {
-      margin-bottom: 22px;
-      min-width: 0;
+      background: white;
+      padding: 22px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 9px #0000000d;
     }
 
     .filters {
       display: flex;
       flex-wrap: wrap;
       align-items: end;
-      gap: 14px;
+      gap: 12px;
     }
 
     .form-group {
-      flex: 1;
-      min-width: 200px;
-    }
-
-    label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 7px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
     }
 
     input, button {
-      font: inherit;
-    }
-
-    input[type="month"] {
-      width: 100%;
-      padding: 11px;
-      border: 1px solid #BCCCDC;
-      border-radius: 8px;
-      background: white;
-      color: #102A43;
-    }
-
-    .btn {
-      border: 0;
-      border-radius: 8px;
-      padding: 12px 18px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .btn-primary {
-      background: #1769AA;
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: #0F5185;
-    }
-
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: wait;
-    }
-
-    .status {
-      margin-top: 14px;
-      color: #486581;
+      padding: 11px 14px;
+      border-radius: 6px;
       font-size: 14px;
     }
 
+    input { border: 1px solid #cbd5e1; }
+
+    .btn {
+      border: 0;
+      cursor: pointer;
+      color: white;
+      background: #1769aa;
+    }
+
+    .btn:hover { opacity: .88; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
     .summary {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
       gap: 16px;
-      margin-bottom: 22px;
     }
 
-    .finance-card p {
-      color: #486581;
-      margin-bottom: 8px;
+    .metric {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 18px;
     }
 
-    .finance-card h2 {
-      font-size: clamp(20px, 3vw, 28px);
-      overflow-wrap: anywhere;
-    }
+    .metric p { margin: 0 0 10px; color: #64748b; }
+    .metric h2 { margin: 0; font-size: 24px; }
 
-    .positive {
-      color: #16805D;
-    }
-
-    .negative {
-      color: #C0392B;
-    }
-
-    .analysis-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 20px;
-      margin-bottom: 22px;
-    }
-
-    .panel h2 {
-      font-size: 19px;
-      margin-bottom: 14px;
-    }
-
-    .chart-box {
+    .chart-container {
       position: relative;
-      width: 100%;
-      height: 310px;
-    }
-
-    .chart-box.pie-chart {
-      height: 330px;
-      max-width: 480px;
-      margin: 0 auto;
-    }
-
-    .chart-note {
-      margin-top: 12px;
-      color: #627D98;
-      font-size: 13px;
-    }
-
-    .progress-track {
-      height: 14px;
-      background: #E8F0F8;
-      border-radius: 20px;
-      overflow: hidden;
-      margin: 14px 0;
-    }
-
-    .progress-bar {
-      height: 100%;
-      width: 0;
-      background: #16805D;
-      border-radius: inherit;
-      transition: width .25s;
-    }
-
-    .table-wrap {
-      overflow-x: auto;
+      min-height: 280px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 420px;
+      margin-top: 12px;
     }
 
     th, td {
-      padding: 13px 12px;
-      border-bottom: 1px solid #E6EDF3;
       text-align: left;
+      padding: 11px;
+      border-bottom: 1px solid #e2e8f0;
     }
 
-    th {
-      background: #F4F7FB;
-      font-size: 14px;
+    th { background: #f1f5f9; }
+
+    .table-wrap { overflow-x: auto; }
+
+    .status {
+      margin: 15px 0 0;
+      color: #475569;
     }
 
-    .empty {
-      text-align: center;
-      color: #627D98;
-      padding: 22px;
-    }
+    .positive { color: #15803d; }
+    .negative { color: #b91c1c; }
 
-    footer {
-      text-align: center;
-      color: #627D98;
-      padding: 20px;
-      font-size: 13px;
-    }
-
-    @media (max-width: 700px) {
-      .summary,
-      .analysis-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .container {
-        width: 94%;
-        margin-top: 20px;
-      }
-
-      .panel, .finance-card {
-        padding: 17px;
-      }
-
-      .filters .btn {
-        width: 100%;
-      }
-
-      .chart-box {
-        height: 280px;
-      }
-
-      .chart-box.pie-chart {
-        height: 300px;
-      }
+    @media (max-width: 600px) {
+      .filters { align-items: stretch; }
+      .filters > * { width: 100%; }
     }
   </style>
 </head>
 
 <body>
-  <header>
-    <strong>Minhas-Financas</strong>
-  </header>
+<header>
+  <h1>Relatórios Financeiros</h1>
+  <p>Analise as suas receitas, despesas e saldo mensal.</p>
+</header>
 
-  <main class="container">
-    <a class="back-link" href="../index.html">
-      ← Voltar ao dashboard
-    </a>
+<main>
+  <section class="panel">
+    <h2>Seleccionar período</h2>
 
-    <section class="intro">
-      <h1>Relatórios e análises financeiras</h1>
-      <p>
-        Analise as suas receitas, despesas e saldo com gráficos e indicadores.
-      </p>
-    </section>
-
-    <section class="panel">
-      <div class="filters">
-        <div class="form-group">
-          <label for="reportMonth">Mês do relatório</label>
-          <input type="month" id="reportMonth" required>
-        </div>
-
-        <button type="button" class="btn btn-primary" id="generateReport">
-          Actualizar relatório
-        </button>
+    <div class="filters">
+      <div class="form-group">
+        <label for="reportMonth">Mês do relatório</label>
+        <input type="month" id="reportMonth" required>
       </div>
 
-      <p id="reportStatus" class="status" role="status" aria-live="polite">
-        A preparar o relatório...
-      </p>
-    </section>
+      <button type="button" class="btn" id="generateReport">
+        Actualizar relatório
+      </button>
 
-    <section class="summary" aria-label="Resumo financeiro mensal">
-      <article class="finance-card">
-        <p>Receitas do mês</p>
-        <h2 class="positive" id="reportIncome">0,00 MT</h2>
-      </article>
+      <button type="button" class="btn" id="exportPDF">
+        Exportar PDF
+      </button>
 
-      <article class="finance-card">
-        <p>Despesas do mês</p>
-        <h2 class="negative" id="reportExpenses">0,00 MT</h2>
-      </article>
+      <button type="button" class="btn" id="exportExcel">
+        Exportar Excel
+      </button>
+    </div>
 
-      <article class="finance-card">
-        <p>Saldo do mês</p>
-        <h2 id="reportBalance">0,00 MT</h2>
-      </article>
-    </section>
+    <p id="reportStatus" class="status" role="status" aria-live="polite">
+      A preparar o relatório...
+    </p>
+  </section>
 
-    <section class="analysis-grid">
-      <article class="panel">
-        <h2>Utilização das receitas</h2>
-        <p id="reportUsage">0% das receitas utilizadas.</p>
+  <section class="panel">
+    <h2>Resumo mensal</h2>
 
-        <div class="progress-track" aria-hidden="true">
-          <div class="progress-bar" id="reportUsageBar"></div>
-        </div>
-
-        <p id="reportUsageNote" class="status">
-          O cálculo será apresentado após carregar os dados.
-        </p>
-      </article>
-
-      <article class="panel">
-        <h2>Resumo do período</h2>
-        <p id="reportSummary">
-          Os resultados aparecerão depois de carregar os movimentos.
-        </p>
-      </article>
-    </section>
-
-    <section class="panel">
-      <h2>Receitas vs. despesas — últimos seis meses</h2>
-      <div class="chart-box">
-        <canvas id="monthlyComparisonChart"
-                role="img"
-                aria-label="Gráfico de barras que compara receitas e despesas dos últimos seis meses">
-          Gráfico de receitas e despesas dos últimos seis meses.
-        </canvas>
+    <div class="summary">
+      <div class="metric">
+        <p>Total de receitas</p>
+        <h2 id="totalIncome">0,00 MT</h2>
       </div>
-      <p class="chart-note">
-        Os valores são apresentados em meticais. O período termina no mês seleccionado.
-      </p>
-    </section>
 
-    <section class="analysis-grid">
-      <article class="panel">
-        <h2>Despesas por categoria — pizza</h2>
-        <div class="chart-box pie-chart">
-          <canvas id="categoryPieChart"
-                  role="img"
-                  aria-label="Gráfico circular da distribuição das despesas por categoria">
-            Distribuição das despesas por categoria.
-          </canvas>
-        </div>
-        <p class="chart-note">
-          Cada fatia representa a proporção de uma categoria no total das despesas do mês.
-        </p>
-      </article>
-
-      <article class="panel">
-        <h2>Comparação das despesas por categoria</h2>
-        <div class="chart-box">
-          <canvas id="categoryBarChart"
-                  role="img"
-                  aria-label="Gráfico de barras das despesas por categoria">
-            Comparação das despesas por categoria.
-          </canvas>
-        </div>
-        <p class="chart-note">
-          As categorias são ordenadas do maior para o menor valor gasto.
-        </p>
-      </article>
-    </section>
-
-    <section class="panel">
-      <h2>Despesas por categoria — detalhe</h2>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Categoria</th>
-              <th>Total gasto</th>
-              <th>Peso nas despesas</th>
-            </tr>
-          </thead>
-
-          <tbody id="reportCategoryHistory">
-            <tr>
-              <td colspan="3" class="empty">
-                A aguardar carregamento dos dados.
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="metric">
+        <p>Total de despesas</p>
+        <h2 id="totalExpenses">0,00 MT</h2>
       </div>
-    </section>
-  </main>
 
-  <footer>
-    Minhas-Financas · Gestão financeira pessoal
-  </footer>
+      <div class="metric">
+        <p>Saldo mensal</p>
+        <h2 id="monthlyBalance">0,00 MT</h2>
+      </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+      <div class="metric">
+        <p>Receitas utilizadas</p>
+        <h2 id="usedPercentage">0%</h2>
+      </div>
+    </div>
+  </section>
 
-  <script>
-  (function () {
-    "use strict";
+  <section class="panel">
+    <h2>Receitas versus despesas</h2>
+    <div class="chart-container">
+      <canvas id="incomeExpenseChart"></canvas>
+    </div>
+  </section>
 
-    const SUPABASE_URL = "https://bbtnybirxmsxqthgbxmf.supabase.co";
+  <section class="panel">
+    <h2>Despesas por categoria</h2>
+    <div class="chart-container">
+      <canvas id="categoryChart"></canvas>
+    </div>
+  </section>
 
-    // Chave publishable pública já utilizada no projecto.
-    const SUPABASE_KEY = "sb_publishable_QMW_RE_Yiej2RMhu9Z67OA_qeK_Pbgi";
+  <section class="panel">
+    <h2>Detalhes das despesas</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Categoria</th>
+            <th>Quantidade de movimentos</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="categoryTable">
+          <tr><td colspan="3">Sem dados disponíveis.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 
-    const { createClient } = window.supabase;
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+  <section class="panel">
+    <h2>Movimentos do mês</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Descrição</th>
+            <th>Categoria</th>
+            <th>Tipo</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+        <tbody id="movementsTable">
+          <tr><td colspan="5">Sem movimentos disponíveis.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
 
-    const monthInput = document.getElementById("reportMonth");
-    const generateButton = document.getElementById("generateReport");
-    const statusElement = document.getElementById("reportStatus");
+<script>
+  /*
+   * CONFIGURAÇÃO SUPABASE
+   *
+   * Substitua os valores abaixo pela URL e pela chave pública
+   * publishable/anon do seu projecto Supabase.
+   *
+   * Nunca coloque uma chave service_role neste ficheiro.
+   */
+  const SUPABASE_URL = "COLOQUE_AQUI_A_URL_DO_SUPABASE";
+  const SUPABASE_KEY = "COLOQUE_AQUI_A_CHAVE_PUBLICA_DO_SUPABASE";
 
-    const money = new Intl.NumberFormat("pt-MZ", {
-      minimumFractionDigits: 2,
+  /*
+   * IMPORTANTE:
+   * Confirme estes nomes no esquema real do seu Supabase.
+   * Este exemplo pressupõe uma tabela "movimentos" com as colunas:
+   * id, user_id, data, descricao, categoria, tipo, valor.
+   */
+  const TABLE_NAME = "movimentos";
+
+  const money = value =>
+    new Intl.NumberFormat("pt-MZ", {
+      style: "currency",
+      currency: "MZN"
+    }).format(Number(value) || 0);
+
+  const number = value =>
+    new Intl.NumberFormat("pt-MZ", {
       maximumFractionDigits: 2
-    });
+    }).format(Number(value) || 0);
 
-    const numberFormat = new Intl.NumberFormat("pt-MZ", {
-      maximumFractionDigits: 1
-    });
+  const escapeHTML = value =>
+    String(value ?? "").replace(/[&<>"']/g, char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    })[char]);
 
-    let monthlyChart = null;
-    let categoryPieChart = null;
-    let categoryBarChart = null;
+  let supabaseClient = null;
+  let incomeExpenseChart = null;
+  let categoryChart = null;
 
-    const chartColors = [
-      "#1769AA",
-      "#16805D",
-      "#E67E22",
-      "#8E44AD",
-      "#D64550",
-      "#16A085",
-      "#D4AC0D",
-      "#5D6D7E",
-      "#E84393",
-      "#7F8C8D"
-    ];
+  let reportData = {
+    month: "",
+    income: 0,
+    expenses: 0,
+    balance: 0,
+    percentage: 0,
+    movements: [],
+    categories: []
+  };
 
-    function formatMoney(value) {
-      return money.format(value) + " MT";
+  function setStatus(message) {
+    document.getElementById("reportStatus").textContent = message;
+  }
+
+  function getMonth() {
+    return document.getElementById("reportMonth").value;
+  }
+
+  function isConfigured() {
+    return SUPABASE_URL.startsWith("https://") &&
+      !SUPABASE_URL.includes("COLOQUE_AQUI") &&
+      SUPABASE_KEY.length > 20 &&
+      !SUPABASE_KEY.includes("COLOQUE_AQUI");
+  }
+
+  async function loadReport() {
+    const month = getMonth();
+
+    if (!month) {
+      setStatus("Seleccione o mês que pretende consultar.");
+      return;
     }
 
-    function setStatus(message) {
-      statusElement.textContent = message;
+    if (!isConfigured()) {
+      setStatus(
+        "Configure primeiro a URL e a chave pública do Supabase no código."
+      );
+      return;
     }
 
-    function getMonthRange(value) {
-      if (!/^\d{4}-\d{2}$/.test(value)) {
-        throw new Error("Seleccione um mês válido.");
-      }
-
-      const [year, month] = value.split("-").map(Number);
-
-      if (month < 1 || month > 12) {
-        throw new Error("O mês seleccionado é inválido.");
-      }
-
-      const start = `${value}-01`;
-      const nextYear = month === 12 ? year + 1 : year;
-      const nextMonth = month === 12 ? 1 : month + 1;
-      const end = `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`;
-
-      return { start, end };
+    if (!supabaseClient) {
+      supabaseClient = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+      );
     }
 
-    function getSixMonthStart(value) {
-      const [year, month] = value.split("-").map(Number);
-      const date = new Date(year, month - 1 - 5, 1);
+    setStatus("A carregar os dados do relatório...");
 
-      return [
-        date.getFullYear(),
-        String(date.getMonth() + 1).padStart(2, "0"),
-        "01"
-      ].join("-");
-    }
+    try {
+      const { data: sessionData, error: sessionError } =
+        await supabaseClient.auth.getSession();
 
-    function sumAmounts(items) {
-      return items.reduce((sum, item) => {
-        const amount = Number(item.amount);
-        return sum + (Number.isFinite(amount) ? amount : 0);
-      }, 0);
-    }
+      if (sessionError) throw sessionError;
 
-    function monthLabel(value) {
-      const [year, month] = value.split("-").map(Number);
+      const user = sessionData.session?.user;
 
-      return new Date(year, month - 1, 1).toLocaleDateString("pt-PT", {
-        month: "short",
-        year: "2-digit"
-      });
-    }
-
-    function aggregateCategories(expenses) {
-      const totals = {};
-
-      expenses.forEach(item => {
-        const category = String(item.category || "Sem categoria");
-        const amount = Number(item.amount) || 0;
-
-        totals[category] = (totals[category] || 0) + amount;
-      });
-
-      return Object.entries(totals)
-        .sort((a, b) => b[1] - a[1]);
-    }
-
-    function renderCategories(expenses) {
-      const tbody = document.getElementById("reportCategoryHistory");
-      tbody.replaceChildren();
-
-      const entries = aggregateCategories(expenses);
-      const total = sumAmounts(expenses);
-
-      if (!entries.length) {
-        const row = tbody.insertRow();
-        const cell = row.insertCell();
-
-        cell.colSpan = 3;
-        cell.className = "empty";
-        cell.textContent = "Não existem despesas neste mês.";
+      if (!user) {
+        setStatus(
+          "Inicie sessão para consultar os seus dados financeiros."
+        );
         return;
       }
 
-      entries.forEach(([category, amount]) => {
-        const row = tbody.insertRow();
+      const [year, monthNumber] = month.split("-").map(Number);
+      const startDate =
+        `${year}-${String(monthNumber).padStart(2, "0")}-01`;
 
-        row.insertCell().textContent = category;
-        row.insertCell().textContent = formatMoney(amount);
+      const nextMonthDate = new Date(year, monthNumber, 1);
+      const endDate = [
+        nextMonthDate.getFullYear(),
+        String(nextMonthDate.getMonth() + 1).padStart(2, "0"),
+        "01"
+      ].join("-");
 
-        const percentage = total > 0 ? amount / total * 100 : 0;
+      const { data, error } = await supabaseClient
+        .from(TABLE_NAME)
+        .select("id,user_id,data,descricao,categoria,tipo,valor")
+        .eq("user_id", user.id)
+        .gte("data", startDate)
+        .lt("data", endDate)
+        .order("data", { ascending: true });
 
-        row.insertCell().textContent =
-          numberFormat.format(percentage) + "%";
+      if (error) throw error;
+
+      const movements = (data || []).map(item => ({
+        date: item.data,
+        description: item.descricao || "",
+        category: item.categoria || "Sem categoria",
+        type: String(item.tipo || "").toLowerCase(),
+        value: Number(item.valor) || 0
+      }));
+
+      /*
+       * Ajuste os valores reconhecidos abaixo caso a sua base de
+       * dados use nomes diferentes para receitas e despesas.
+       */
+      const isIncome = item =>
+        ["receita", "rendimento", "income"].includes(item.type);
+
+      const isExpense = item =>
+        ["despesa", "expense"].includes(item.type);
+
+      const income = movements
+        .filter(isIncome)
+        .reduce((sum, item) => sum + item.value, 0);
+
+      const expenses = movements
+        .filter(isExpense)
+        .reduce((sum, item) => sum + item.value, 0);
+
+      const categoryMap = {};
+
+      movements.filter(isExpense).forEach(item => {
+        if (!categoryMap[item.category]) {
+          categoryMap[item.category] = { count: 0, total: 0 };
+        }
+
+        categoryMap[item.category].count += 1;
+        categoryMap[item.category].total += item.value;
       });
+
+      reportData = {
+        month,
+        income,
+        expenses,
+        balance: income - expenses,
+        percentage: income > 0 ? expenses / income * 100 : 0,
+        movements,
+        categories: Object.entries(categoryMap).map(
+          ([category, details]) => ({
+            category,
+            count: details.count,
+            total: details.total
+          })
+        ).sort((a, b) => b.total - a.total)
+      };
+
+      renderReport();
+      setStatus("Relatório actualizado com sucesso.");
+    } catch (error) {
+      console.error("Erro ao carregar relatório:", error);
+      setStatus(
+        "Não foi possível carregar os dados. Verifique a tabela, as colunas, a sessão e as políticas RLS do Supabase."
+      );
+    }
+  }
+
+  function renderReport() {
+    const data = reportData;
+
+    document.getElementById("totalIncome").textContent =
+      money(data.income);
+
+    document.getElementById("totalExpenses").textContent =
+      money(data.expenses);
+
+    const balanceElement = document.getElementById("monthlyBalance");
+    balanceElement.textContent = money(data.balance);
+    balanceElement.className = data.balance < 0 ? "negative" : "positive";
+
+    document.getElementById("usedPercentage").textContent =
+      `${number(data.percentage)}%`;
+
+    renderMovements();
+    renderCategories();
+    renderCharts();
+  }
+
+  function renderMovements() {
+    const tbody = document.getElementById("movementsTable");
+
+    if (!reportData.movements.length) {
+      tbody.innerHTML =
+        '<tr><td colspan="5">Não existem movimentos neste mês.</td></tr>';
+      return;
     }
 
-    function renderMonthlyChart(incomes, expenses, selectedMonth) {
-      const monthlyTotals = {};
+    tbody.innerHTML = reportData.movements.map(item => `
+      <tr>
+        <td>${escapeHTML(item.date)}</td>
+        <td>${escapeHTML(item.description)}</td>
+        <td>${escapeHTML(item.category)}</td>
+        <td>${escapeHTML(item.type)}</td>
+        <td>${escapeHTML(money(item.value))}</td>
+      </tr>
+    `).join("");
+  }
 
-      // Preparar os seis meses, incluindo meses sem movimentos.
-      const [year, month] = selectedMonth.split("-").map(Number);
+  function renderCategories() {
+    const tbody = document.getElementById("categoryTable");
 
-      for (let i = 5; i >= 0; i--) {
-        const date = new Date(year, month - 1 - i, 1);
-        const key =
-          `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    if (!reportData.categories.length) {
+      tbody.innerHTML =
+        '<tr><td colspan="3">Não existem despesas categorizadas neste mês.</td></tr>';
+      return;
+    }
 
-        monthlyTotals[key] = {
-          income: 0,
-          expense: 0
-        };
-      }
+    tbody.innerHTML = reportData.categories.map(item => `
+      <tr>
+        <td>${escapeHTML(item.category)}</td>
+        <td>${item.count}</td>
+        <td>${escapeHTML(money(item.total))}</td>
+      </tr>
+    `).join("");
+  }
 
-      incomes.forEach(item => {
-        const key = String(item.income_date || "").slice(0, 7);
+  function renderCharts() {
+    if (incomeExpenseChart) incomeExpenseChart.destroy();
+    if (categoryChart) categoryChart.destroy();
 
-        if (monthlyTotals[key]) {
-          monthlyTotals[key].income += Number(item.amount) || 0;
-        }
-      });
-
-      expenses.forEach(item => {
-        const key = String(item.expense_date || "").slice(0, 7);
-
-        if (monthlyTotals[key]) {
-          monthlyTotals[key].expense += Number(item.amount) || 0;
-        }
-      });
-
-      const labels = Object.keys(monthlyTotals).map(monthLabel);
-      const incomeData = Object.values(monthlyTotals).map(item => item.income);
-      const expenseData = Object.values(monthlyTotals).map(item => item.expense);
-
-      if (monthlyChart) monthlyChart.destroy();
-
-      monthlyChart = new Chart(
-        document.getElementById("monthlyComparisonChart"),
-        {
-          type: "bar",
-          data: {
-            labels,
-            datasets: [
-              {
-                label: "Receitas",
-                data: incomeData,
-                backgroundColor: "#16805D",
-                borderRadius: 5
-              },
-              {
-                label: "Despesas",
-                data: expenseData,
-                backgroundColor: "#D64550",
-                borderRadius: 5
-              }
+    incomeExpenseChart = new Chart(
+      document.getElementById("incomeExpenseChart"),
+      {
+        type: "bar",
+        data: {
+          labels: ["Receitas", "Despesas", "Saldo"],
+          datasets: [{
+            label: "Valor em MT",
+            data: [
+              reportData.income,
+              reportData.expenses,
+              reportData.balance
+            ],
+            backgroundColor: [
+              "#16a34a",
+              "#dc2626",
+              "#2563eb"
             ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-              mode: "index",
-              intersect: false
-            },
-            plugins: {
-              legend: {
-                position: "bottom"
-              },
-              tooltip: {
-                callbacks: {
-                  label: context =>
-                    `${context.dataset.label}: ${formatMoney(context.parsed.y)}`
-                }
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: {
-                  callback: value =>
-                    new Intl.NumberFormat("pt-MZ", {
-                      notation: "compact",
-                      maximumFractionDigits: 1
-                    }).format(value) + " MT"
-                }
-              }
-            }
-          }
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { beginAtZero: true } }
         }
-      );
-    }
-
-    function renderCategoryCharts(expenses) {
-      const entries = aggregateCategories(expenses);
-
-      const labels = entries.map(entry => entry[0]);
-      const values = entries.map(entry => entry[1]);
-      const colors = labels.map((_, index) =>
-        chartColors[index % chartColors.length]
-      );
-
-      if (categoryPieChart) categoryPieChart.destroy();
-
-      categoryPieChart = new Chart(
-        document.getElementById("categoryPieChart"),
-        {
-          type: "pie",
-          data: {
-            labels,
-            datasets: [{
-              data: values,
-              backgroundColor: colors,
-              borderColor: "#FFFFFF",
-              borderWidth: 2
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: "bottom"
-              },
-              tooltip: {
-                callbacks: {
-                  label: context => {
-                    const total = context.dataset.data.reduce(
-                      (sum, value) => sum + Number(value || 0), 0
-                    );
-
-                    const percentage = total > 0
-                      ? context.parsed / total * 100
-                      : 0;
-
-                    return `${context.label}: ${formatMoney(context.parsed)} (${numberFormat.format(percentage)}%)`;
-                  }
-                }
-              }
-            }
-          }
-        }
-      );
-
-      if (categoryBarChart) categoryBarChart.destroy();
-
-      categoryBarChart = new Chart(
-        document.getElementById("categoryBarChart"),
-        {
-          type: "bar",
-          data: {
-            labels,
-            datasets: [{
-              label: "Total gasto",
-              data: values,
-              backgroundColor: colors,
-              borderRadius: 5
-            }]
-          },
-          options: {
-            indexAxis: "y",
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                display: false
-              },
-              tooltip: {
-                callbacks: {
-                  label: context => formatMoney(context.parsed.x)
-                }
-              }
-            },
-            scales: {
-              x: {
-                beginAtZero: true,
-                ticks: {
-                  callback: value =>
-                    new Intl.NumberFormat("pt-MZ", {
-                      notation: "compact",
-                      maximumFractionDigits: 1
-                    }).format(value) + " MT"
-                }
-              },
-              y: {
-                ticks: {
-                  autoSkip: false
-                }
-              }
-            }
-          }
-        }
-      );
-    }
-
-    async function generateReport() {
-      generateButton.disabled = true;
-      setStatus("A carregar os movimentos financeiros...");
-
-      try {
-        if (typeof window.Chart === "undefined") {
-          throw new Error(
-            "Não foi possível carregar os gráficos. Verifique a ligação à Internet e actualize a página."
-          );
-        }
-
-        const { data: sessionData, error: sessionError } =
-          await supabase.auth.getSession();
-
-        if (sessionError) throw sessionError;
-
-        if (!sessionData.session) {
-          setStatus(
-            "Não existe uma sessão activa nesta página. Entre na aplicação e tente novamente."
-          );
-          return;
-        }
-
-        const userId = sessionData.session.user.id;
-        const { start, end } = getMonthRange(monthInput.value);
-        const sixMonthStart = getSixMonthStart(monthInput.value);
-
-        // Buscar apenas os movimentos do utilizador autenticado.
-        const [incomeResult, expenseResult] = await Promise.all([
-          supabase
-            .from("income")
-            .select("amount, category, income_date")
-            .eq("user_id", userId)
-            .gte("income_date", sixMonthStart)
-            .lt("income_date", end),
-
-          supabase
-            .from("expenses")
-            .select("amount, category, expense_date")
-            .eq("user_id", userId)
-            .gte("expense_date", sixMonthStart)
-            .lt("expense_date", end)
-        ]);
-
-        if (incomeResult.error) throw incomeResult.error;
-        if (expenseResult.error) throw expenseResult.error;
-
-        const allIncomes = incomeResult.data || [];
-        const allExpenses = expenseResult.data || [];
-
-        // Separar os movimentos do mês seleccionado para os indicadores e categorias.
-        const incomes = allIncomes.filter(item =>
-          item.income_date >= start && item.income_date < end
-        );
-
-        const expenses = allExpenses.filter(item =>
-          item.expense_date >= start && item.expense_date < end
-        );
-
-        const income = sumAmounts(incomes);
-        const expense = sumAmounts(expenses);
-        const balance = income - expense;
-
-        document.getElementById("reportIncome").textContent =
-          formatMoney(income);
-
-        document.getElementById("reportExpenses").textContent =
-          formatMoney(expense);
-
-        const balanceElement = document.getElementById("reportBalance");
-        balanceElement.textContent = formatMoney(balance);
-        balanceElement.className = balance >= 0 ? "positive" : "negative";
-
-        const usage = income > 0 ? expense / income * 100 : 0;
-
-        document.getElementById("reportUsage").textContent =
-          income > 0
-            ? numberFormat.format(usage) + "% das receitas utilizadas."
-            : "Não é possível calcular a percentagem sem receitas.";
-
-        document.getElementById("reportUsageBar").style.width =
-          Math.min(Math.max(usage, 0), 100) + "%";
-
-        document.getElementById("reportUsageNote").textContent =
-          income <= 0
-            ? "Registe receitas para calcular a utilização."
-            : usage > 100
-              ? "As despesas ultrapassaram as receitas do mês."
-              : "Percentagem calculada com base nas receitas do mês.";
-
-        document.getElementById("reportSummary").textContent =
-          `Foram registadas ${incomes.length} receitas e ` +
-          `${expenses.length} despesas. ` +
-          (balance >= 0
-            ? `O saldo mensal é positivo em ${formatMoney(balance)}.`
-            : `As despesas excederam as receitas em ${formatMoney(Math.abs(balance))}.`);
-
-        renderCategories(expenses);
-        renderMonthlyChart(allIncomes, allExpenses, monthInput.value);
-        renderCategoryCharts(expenses);
-
-        setStatus("Relatório actualizado com sucesso.");
-      } catch (error) {
-        console.error("Erro nos relatórios:", error);
-
-        const detail = error && error.message
-          ? error.message
-          : String(error);
-
-        setStatus("Erro ao carregar relatórios: " + detail);
-      } finally {
-        generateButton.disabled = false;
       }
+    );
+
+    categoryChart = new Chart(
+      document.getElementById("categoryChart"),
+      {
+        type: "doughnut",
+        data: {
+          labels: reportData.categories.map(item => item.category),
+          datasets: [{
+            data: reportData.categories.map(item => item.total)
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      }
+    );
+  }
+
+  function exportPDF() {
+    if (!reportData.month) {
+      setStatus("Actualize primeiro o relatório.");
+      return;
     }
 
-    const now = new Date();
+    if (!window.jspdf?.jsPDF) {
+      setStatus("A biblioteca PDF não está disponível. Verifique a Internet.");
+      return;
+    }
 
-    monthInput.value =
-      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const doc = new window.jspdf.jsPDF();
+    doc.setFontSize(18);
+    doc.text("Relatório Financeiro", 14, 18);
 
-    generateButton.addEventListener("click", generateReport);
+    doc.setFontSize(11);
+    doc.text(`Mês: ${reportData.month}`, 14, 28);
+    doc.text(`Receitas: ${money(reportData.income)}`, 14, 36);
+    doc.text(`Despesas: ${money(reportData.expenses)}`, 14, 44);
+    doc.text(`Saldo: ${money(reportData.balance)}`, 14, 52);
+    doc.text(
+      `Receitas utilizadas: ${number(reportData.percentage)}%`,
+      14,
+      60
+    );
 
-    monthInput.addEventListener("change", () => {
-      if (monthInput.value) generateReport();
+    doc.autoTable({
+      startY: 68,
+      head: [["Data", "Descrição", "Categoria", "Tipo", "Valor"]],
+      body: reportData.movements.map(item => [
+        item.date,
+        item.description,
+        item.category,
+        item.type,
+        money(item.value)
+      ]),
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [23, 54, 93] }
     });
 
-    generateReport();
-  })();
-  </script>
+    doc.autoTable({
+      head: [["Categoria", "N.º de movimentos", "Total"]],
+      body: reportData.categories.map(item => [
+        item.category,
+        item.count,
+        money(item.total)
+      ]),
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [23, 54, 93] }
+    });
+
+    doc.save(`relatorio-financeiro-${reportData.month}.pdf`);
+    setStatus("Exportação PDF concluída.");
+  }
+
+  function exportExcel() {
+    if (!reportData.month) {
+      setStatus("Actualize primeiro o relatório.");
+      return;
+    }
+
+    if (!window.XLSX) {
+      setStatus("A biblioteca Excel não está disponível. Verifique a Internet.");
+      return;
+    }
+
+    const workbook = XLSX.utils.book_new();
+
+    const summary = [
+      ["Relatório Financeiro"],
+      ["Mês", reportData.month],
+      ["Receitas (MT)", reportData.income],
+      ["Despesas (MT)", reportData.expenses],
+      ["Saldo (MT)", reportData.balance],
+      ["Receitas utilizadas (%)", reportData.percentage]
+    ];
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.aoa_to_sheet(summary),
+      "Resumo"
+    );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.json_to_sheet(
+        reportData.categories.map(item => ({
+          Categoria: item.category,
+          Movimentos: item.count,
+          Total_MT: item.total
+        }))
+      ),
+      "Despesas por categoria"
+    );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.json_to_sheet(
+        reportData.movements.map(item => ({
+          Data: item.date,
+          Descricao: item.description,
+          Categoria: item.category,
+          Tipo: item.type,
+          Valor_MT: item.value
+        }))
+      ),
+      "Movimentos"
+    );
+
+    XLSX.writeFile(
+      workbook,
+      `relatorio-financeiro-${reportData.month}.xlsx`
+    );
+
+    setStatus("Exportação Excel concluída.");
+  }
+
+  document.getElementById("generateReport")
+    .addEventListener("click", loadReport);
+
+  document.getElementById("exportPDF")
+    .addEventListener("click", exportPDF);
+
+  document.getElementById("exportExcel")
+    .addEventListener("click", exportExcel);
+
+  document.getElementById("reportMonth").value =
+    new Date().toISOString().slice(0, 7);
+</script>
 </body>
 </html>
