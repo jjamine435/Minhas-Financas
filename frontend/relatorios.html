@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Relatórios mensais de receitas, despesas e saldo.">
+  <meta name="description" content="Relatórios mensais de receitas, despesas, saldo e gráficos financeiros.">
   <title>Relatórios Financeiros | Minhas-Financas</title>
 
   <style>
@@ -59,6 +59,7 @@
 
     .panel {
       margin-bottom: 22px;
+      min-width: 0;
     }
 
     .filters {
@@ -109,6 +110,11 @@
       background: #0F5185;
     }
 
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
     .status {
       margin-top: 14px;
       color: #486581;
@@ -150,6 +156,24 @@
     .panel h2 {
       font-size: 19px;
       margin-bottom: 14px;
+    }
+
+    .chart-box {
+      position: relative;
+      width: 100%;
+      height: 310px;
+    }
+
+    .chart-box.pie-chart {
+      height: 330px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .chart-note {
+      margin-top: 12px;
+      color: #627D98;
+      font-size: 13px;
     }
 
     .progress-track {
@@ -203,10 +227,7 @@
     }
 
     @media (max-width: 700px) {
-      .summary {
-        grid-template-columns: 1fr;
-      }
-
+      .summary,
       .analysis-grid {
         grid-template-columns: 1fr;
       }
@@ -222,6 +243,14 @@
 
       .filters .btn {
         width: 100%;
+      }
+
+      .chart-box {
+        height: 280px;
+      }
+
+      .chart-box.pie-chart {
+        height: 300px;
       }
     }
   </style>
@@ -240,7 +269,7 @@
     <section class="intro">
       <h1>Relatórios e análises financeiras</h1>
       <p>
-        Analise as suas receitas, despesas e saldo por mês.
+        Analise as suas receitas, despesas e saldo com gráficos e indicadores.
       </p>
     </section>
 
@@ -301,7 +330,51 @@
     </section>
 
     <section class="panel">
-      <h2>Despesas por categoria</h2>
+      <h2>Receitas vs. despesas — últimos seis meses</h2>
+      <div class="chart-box">
+        <canvas id="monthlyComparisonChart"
+                role="img"
+                aria-label="Gráfico de barras que compara receitas e despesas dos últimos seis meses">
+          Gráfico de receitas e despesas dos últimos seis meses.
+        </canvas>
+      </div>
+      <p class="chart-note">
+        Os valores são apresentados em meticais. O período termina no mês seleccionado.
+      </p>
+    </section>
+
+    <section class="analysis-grid">
+      <article class="panel">
+        <h2>Despesas por categoria — pizza</h2>
+        <div class="chart-box pie-chart">
+          <canvas id="categoryPieChart"
+                  role="img"
+                  aria-label="Gráfico circular da distribuição das despesas por categoria">
+            Distribuição das despesas por categoria.
+          </canvas>
+        </div>
+        <p class="chart-note">
+          Cada fatia representa a proporção de uma categoria no total das despesas do mês.
+        </p>
+      </article>
+
+      <article class="panel">
+        <h2>Comparação das despesas por categoria</h2>
+        <div class="chart-box">
+          <canvas id="categoryBarChart"
+                  role="img"
+                  aria-label="Gráfico de barras das despesas por categoria">
+            Comparação das despesas por categoria.
+          </canvas>
+        </div>
+        <p class="chart-note">
+          As categorias são ordenadas do maior para o menor valor gasto.
+        </p>
+      </article>
+    </section>
+
+    <section class="panel">
+      <h2>Despesas por categoria — detalhe</h2>
 
       <div class="table-wrap">
         <table>
@@ -328,215 +401,475 @@
   <footer>
     Minhas-Financas · Gestão financeira pessoal
   </footer>
-  
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<script>
-(function () {
-  "use strict";
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
 
-  const SUPABASE_URL = "https://bbtnybirxmsxqthgbxmf.supabase.co";
+  <script>
+  (function () {
+    "use strict";
 
-  // Utilize a chave publishable já configurada no projecto.
-  const SUPABASE_KEY = "sb_publishable_QMW_RE_Yiej2RMhu9Z67OA_qeK_Pbgi";
+    const SUPABASE_URL = "https://bbtnybirxmsxqthgbxmf.supabase.co";
 
-  const { createClient } = window.supabase;
-  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    // Chave publishable pública já utilizada no projecto.
+    const SUPABASE_KEY = "sb_publishable_QMW_RE_Yiej2RMhu9Z67OA_qeK_Pbgi";
 
-  const monthInput = document.getElementById("reportMonth");
-  const generateButton = document.getElementById("generateReport");
-  const statusElement = document.getElementById("reportStatus");
+    const { createClient } = window.supabase;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const money = new Intl.NumberFormat("pt-MZ", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
+    const monthInput = document.getElementById("reportMonth");
+    const generateButton = document.getElementById("generateReport");
+    const statusElement = document.getElementById("reportStatus");
 
-  function formatMoney(value) {
-    return money.format(value) + " MT";
-  }
-
-  function setStatus(message) {
-    statusElement.textContent = message;
-  }
-
-  function getMonthRange(value) {
-    if (!/^\d{4}-\d{2}$/.test(value)) {
-      throw new Error("Seleccione um mês válido.");
-    }
-
-    const [year, month] = value.split("-").map(Number);
-
-    if (month < 1 || month > 12) {
-      throw new Error("O mês seleccionado é inválido.");
-    }
-
-    const start = `${value}-01`;
-    const nextYear = month === 12 ? year + 1 : year;
-    const nextMonth = month === 12 ? 1 : month + 1;
-    const end = `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`;
-
-    return { start, end };
-  }
-
-  function sumAmounts(items) {
-    return items.reduce((sum, item) => {
-      const amount = Number(item.amount);
-      return sum + (Number.isFinite(amount) ? amount : 0);
-    }, 0);
-  }
-
-  function renderCategories(expenses) {
-    const tbody = document.getElementById("reportCategoryHistory");
-    tbody.replaceChildren();
-
-    const totals = {};
-
-    expenses.forEach(item => {
-      const category = item.category || "Sem categoria";
-      const amount = Number(item.amount) || 0;
-      totals[category] = (totals[category] || 0) + amount;
+    const money = new Intl.NumberFormat("pt-MZ", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     });
 
-    const total = sumAmounts(expenses);
-    const entries = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+    const numberFormat = new Intl.NumberFormat("pt-MZ", {
+      maximumFractionDigits: 1
+    });
 
-    if (!entries.length) {
-      const row = tbody.insertRow();
-      const cell = row.insertCell();
-      cell.colSpan = 3;
-      cell.className = "empty";
-      cell.textContent = "Não existem despesas neste mês.";
-      return;
+    let monthlyChart = null;
+    let categoryPieChart = null;
+    let categoryBarChart = null;
+
+    const chartColors = [
+      "#1769AA",
+      "#16805D",
+      "#E67E22",
+      "#8E44AD",
+      "#D64550",
+      "#16A085",
+      "#D4AC0D",
+      "#5D6D7E",
+      "#E84393",
+      "#7F8C8D"
+    ];
+
+    function formatMoney(value) {
+      return money.format(value) + " MT";
     }
 
-    entries.forEach(([category, amount]) => {
-      const row = tbody.insertRow();
-      row.insertCell().textContent = category;
-      row.insertCell().textContent = formatMoney(amount);
+    function setStatus(message) {
+      statusElement.textContent = message;
+    }
 
-      const percentage = total > 0 ? amount / total * 100 : 0;
-      row.insertCell().textContent =
-        percentage.toLocaleString("pt-MZ", {
-          minimumFractionDigits: 1,
-          maximumFractionDigits: 1
-        }) + "%";
-    });
-  }
-
-  async function generateReport() {
-    generateButton.disabled = true;
-    setStatus("A carregar os movimentos financeiros...");
-
-    try {
-      if (SUPABASE_KEY === "COLOQUE_AQUI_A_CHAVE_PUBLISHABLE") {
-        throw new Error("Falta configurar a chave publishable do Supabase.");
+    function getMonthRange(value) {
+      if (!/^\d{4}-\d{2}$/.test(value)) {
+        throw new Error("Seleccione um mês válido.");
       }
 
-      const { data: sessionData, error: sessionError } =
-        await supabase.auth.getSession();
+      const [year, month] = value.split("-").map(Number);
 
-      if (sessionError) throw sessionError;
+      if (month < 1 || month > 12) {
+        throw new Error("O mês seleccionado é inválido.");
+      }
 
-      if (!sessionData.session) {
-        setStatus(
-          "Não existe uma sessão activa nesta página. Entre na aplicação e tente novamente."
-        );
+      const start = `${value}-01`;
+      const nextYear = month === 12 ? year + 1 : year;
+      const nextMonth = month === 12 ? 1 : month + 1;
+      const end = `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`;
+
+      return { start, end };
+    }
+
+    function getSixMonthStart(value) {
+      const [year, month] = value.split("-").map(Number);
+      const date = new Date(year, month - 1 - 5, 1);
+
+      return [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, "0"),
+        "01"
+      ].join("-");
+    }
+
+    function sumAmounts(items) {
+      return items.reduce((sum, item) => {
+        const amount = Number(item.amount);
+        return sum + (Number.isFinite(amount) ? amount : 0);
+      }, 0);
+    }
+
+    function monthLabel(value) {
+      const [year, month] = value.split("-").map(Number);
+
+      return new Date(year, month - 1, 1).toLocaleDateString("pt-PT", {
+        month: "short",
+        year: "2-digit"
+      });
+    }
+
+    function aggregateCategories(expenses) {
+      const totals = {};
+
+      expenses.forEach(item => {
+        const category = String(item.category || "Sem categoria");
+        const amount = Number(item.amount) || 0;
+
+        totals[category] = (totals[category] || 0) + amount;
+      });
+
+      return Object.entries(totals)
+        .sort((a, b) => b[1] - a[1]);
+    }
+
+    function renderCategories(expenses) {
+      const tbody = document.getElementById("reportCategoryHistory");
+      tbody.replaceChildren();
+
+      const entries = aggregateCategories(expenses);
+      const total = sumAmounts(expenses);
+
+      if (!entries.length) {
+        const row = tbody.insertRow();
+        const cell = row.insertCell();
+
+        cell.colSpan = 3;
+        cell.className = "empty";
+        cell.textContent = "Não existem despesas neste mês.";
         return;
       }
 
-      const userId = sessionData.session.user.id;
-      const { start, end } = getMonthRange(monthInput.value);
+      entries.forEach(([category, amount]) => {
+        const row = tbody.insertRow();
 
-      const [incomeResult, expenseResult] = await Promise.all([
-        supabase
-          .from("income")
-          .select("amount, category, income_date")
-          .eq("user_id", userId)
-          .gte("income_date", start)
-          .lt("income_date", end),
+        row.insertCell().textContent = category;
+        row.insertCell().textContent = formatMoney(amount);
 
-        supabase
-          .from("expenses")
-          .select("amount, category, expense_date")
-          .eq("user_id", userId)
-          .gte("expense_date", start)
-          .lt("expense_date", end)
-      ]);
+        const percentage = total > 0 ? amount / total * 100 : 0;
 
-      if (incomeResult.error) throw incomeResult.error;
-      if (expenseResult.error) throw expenseResult.error;
-
-      const incomes = incomeResult.data || [];
-      const expenses = expenseResult.data || [];
-
-      const income = sumAmounts(incomes);
-      const expense = sumAmounts(expenses);
-      const balance = income - expense;
-
-      document.getElementById("reportIncome").textContent =
-        formatMoney(income);
-
-      document.getElementById("reportExpenses").textContent =
-        formatMoney(expense);
-
-      const balanceElement = document.getElementById("reportBalance");
-      balanceElement.textContent = formatMoney(balance);
-      balanceElement.className = balance >= 0 ? "positive" : "negative";
-
-      const usage = income > 0 ? expense / income * 100 : 0;
-
-      document.getElementById("reportUsage").textContent =
-        income > 0
-          ? usage.toLocaleString("pt-MZ", { maximumFractionDigits: 1 }) +
-            "% das receitas utilizadas."
-          : "Não é possível calcular a percentagem sem receitas.";
-
-      document.getElementById("reportUsageBar").style.width =
-        Math.min(Math.max(usage, 0), 100) + "%";
-
-      document.getElementById("reportUsageNote").textContent =
-        income <= 0
-          ? "Registe receitas para calcular a utilização."
-          : usage > 100
-            ? "As despesas ultrapassaram as receitas do mês."
-            : "Percentagem calculada com base nas receitas do mês.";
-
-      document.getElementById("reportSummary").textContent =
-        `Foram registadas ${incomes.length} receitas e ` +
-        `${expenses.length} despesas. ` +
-        (balance >= 0
-          ? `O saldo mensal é positivo em ${formatMoney(balance)}.`
-          : `As despesas excederam as receitas em ${formatMoney(Math.abs(balance))}.`);
-
-      renderCategories(expenses);
-      setStatus("Relatório actualizado com sucesso.");
-   
-} catch (error) {
-  console.error("Erro nos relatórios:", error);
-
-  const detalhe = error && error.message
-    ? error.message
-    : String(error);
-
-  setStatus("Erro ao carregar relatórios: " + detalhe);
-    } finally {
-      generateButton.disabled = false;
+        row.insertCell().textContent =
+          numberFormat.format(percentage) + "%";
+      });
     }
-  }
 
-  const now = new Date();
-  monthInput.value =
-    `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    function renderMonthlyChart(incomes, expenses, selectedMonth) {
+      const monthlyTotals = {};
 
-  generateButton.addEventListener("click", generateReport);
+      // Preparar os seis meses, incluindo meses sem movimentos.
+      const [year, month] = selectedMonth.split("-").map(Number);
 
-  monthInput.addEventListener("change", () => {
-    if (monthInput.value) generateReport();
-  });
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date(year, month - 1 - i, 1);
+        const key =
+          `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 
-  generateReport();
-})();
-</script>
+        monthlyTotals[key] = {
+          income: 0,
+          expense: 0
+        };
+      }
+
+      incomes.forEach(item => {
+        const key = String(item.income_date || "").slice(0, 7);
+
+        if (monthlyTotals[key]) {
+          monthlyTotals[key].income += Number(item.amount) || 0;
+        }
+      });
+
+      expenses.forEach(item => {
+        const key = String(item.expense_date || "").slice(0, 7);
+
+        if (monthlyTotals[key]) {
+          monthlyTotals[key].expense += Number(item.amount) || 0;
+        }
+      });
+
+      const labels = Object.keys(monthlyTotals).map(monthLabel);
+      const incomeData = Object.values(monthlyTotals).map(item => item.income);
+      const expenseData = Object.values(monthlyTotals).map(item => item.expense);
+
+      if (monthlyChart) monthlyChart.destroy();
+
+      monthlyChart = new Chart(
+        document.getElementById("monthlyComparisonChart"),
+        {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Receitas",
+                data: incomeData,
+                backgroundColor: "#16805D",
+                borderRadius: 5
+              },
+              {
+                label: "Despesas",
+                data: expenseData,
+                backgroundColor: "#D64550",
+                borderRadius: 5
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+              mode: "index",
+              intersect: false
+            },
+            plugins: {
+              legend: {
+                position: "bottom"
+              },
+              tooltip: {
+                callbacks: {
+                  label: context =>
+                    `${context.dataset.label}: ${formatMoney(context.parsed.y)}`
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: value =>
+                    new Intl.NumberFormat("pt-MZ", {
+                      notation: "compact",
+                      maximumFractionDigits: 1
+                    }).format(value) + " MT"
+                }
+              }
+            }
+          }
+        }
+      );
+    }
+
+    function renderCategoryCharts(expenses) {
+      const entries = aggregateCategories(expenses);
+
+      const labels = entries.map(entry => entry[0]);
+      const values = entries.map(entry => entry[1]);
+      const colors = labels.map((_, index) =>
+        chartColors[index % chartColors.length]
+      );
+
+      if (categoryPieChart) categoryPieChart.destroy();
+
+      categoryPieChart = new Chart(
+        document.getElementById("categoryPieChart"),
+        {
+          type: "pie",
+          data: {
+            labels,
+            datasets: [{
+              data: values,
+              backgroundColor: colors,
+              borderColor: "#FFFFFF",
+              borderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: "bottom"
+              },
+              tooltip: {
+                callbacks: {
+                  label: context => {
+                    const total = context.dataset.data.reduce(
+                      (sum, value) => sum + Number(value || 0), 0
+                    );
+
+                    const percentage = total > 0
+                      ? context.parsed / total * 100
+                      : 0;
+
+                    return `${context.label}: ${formatMoney(context.parsed)} (${numberFormat.format(percentage)}%)`;
+                  }
+                }
+              }
+            }
+          }
+        }
+      );
+
+      if (categoryBarChart) categoryBarChart.destroy();
+
+      categoryBarChart = new Chart(
+        document.getElementById("categoryBarChart"),
+        {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [{
+              label: "Total gasto",
+              data: values,
+              backgroundColor: colors,
+              borderRadius: 5
+            }]
+          },
+          options: {
+            indexAxis: "y",
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                callbacks: {
+                  label: context => formatMoney(context.parsed.x)
+                }
+              }
+            },
+            scales: {
+              x: {
+                beginAtZero: true,
+                ticks: {
+                  callback: value =>
+                    new Intl.NumberFormat("pt-MZ", {
+                      notation: "compact",
+                      maximumFractionDigits: 1
+                    }).format(value) + " MT"
+                }
+              },
+              y: {
+                ticks: {
+                  autoSkip: false
+                }
+              }
+            }
+          }
+        }
+      );
+    }
+
+    async function generateReport() {
+      generateButton.disabled = true;
+      setStatus("A carregar os movimentos financeiros...");
+
+      try {
+        if (typeof window.Chart === "undefined") {
+          throw new Error(
+            "Não foi possível carregar os gráficos. Verifique a ligação à Internet e actualize a página."
+          );
+        }
+
+        const { data: sessionData, error: sessionError } =
+          await supabase.auth.getSession();
+
+        if (sessionError) throw sessionError;
+
+        if (!sessionData.session) {
+          setStatus(
+            "Não existe uma sessão activa nesta página. Entre na aplicação e tente novamente."
+          );
+          return;
+        }
+
+        const userId = sessionData.session.user.id;
+        const { start, end } = getMonthRange(monthInput.value);
+        const sixMonthStart = getSixMonthStart(monthInput.value);
+
+        // Buscar apenas os movimentos do utilizador autenticado.
+        const [incomeResult, expenseResult] = await Promise.all([
+          supabase
+            .from("income")
+            .select("amount, category, income_date")
+            .eq("user_id", userId)
+            .gte("income_date", sixMonthStart)
+            .lt("income_date", end),
+
+          supabase
+            .from("expenses")
+            .select("amount, category, expense_date")
+            .eq("user_id", userId)
+            .gte("expense_date", sixMonthStart)
+            .lt("expense_date", end)
+        ]);
+
+        if (incomeResult.error) throw incomeResult.error;
+        if (expenseResult.error) throw expenseResult.error;
+
+        const allIncomes = incomeResult.data || [];
+        const allExpenses = expenseResult.data || [];
+
+        // Separar os movimentos do mês seleccionado para os indicadores e categorias.
+        const incomes = allIncomes.filter(item =>
+          item.income_date >= start && item.income_date < end
+        );
+
+        const expenses = allExpenses.filter(item =>
+          item.expense_date >= start && item.expense_date < end
+        );
+
+        const income = sumAmounts(incomes);
+        const expense = sumAmounts(expenses);
+        const balance = income - expense;
+
+        document.getElementById("reportIncome").textContent =
+          formatMoney(income);
+
+        document.getElementById("reportExpenses").textContent =
+          formatMoney(expense);
+
+        const balanceElement = document.getElementById("reportBalance");
+        balanceElement.textContent = formatMoney(balance);
+        balanceElement.className = balance >= 0 ? "positive" : "negative";
+
+        const usage = income > 0 ? expense / income * 100 : 0;
+
+        document.getElementById("reportUsage").textContent =
+          income > 0
+            ? numberFormat.format(usage) + "% das receitas utilizadas."
+            : "Não é possível calcular a percentagem sem receitas.";
+
+        document.getElementById("reportUsageBar").style.width =
+          Math.min(Math.max(usage, 0), 100) + "%";
+
+        document.getElementById("reportUsageNote").textContent =
+          income <= 0
+            ? "Registe receitas para calcular a utilização."
+            : usage > 100
+              ? "As despesas ultrapassaram as receitas do mês."
+              : "Percentagem calculada com base nas receitas do mês.";
+
+        document.getElementById("reportSummary").textContent =
+          `Foram registadas ${incomes.length} receitas e ` +
+          `${expenses.length} despesas. ` +
+          (balance >= 0
+            ? `O saldo mensal é positivo em ${formatMoney(balance)}.`
+            : `As despesas excederam as receitas em ${formatMoney(Math.abs(balance))}.`);
+
+        renderCategories(expenses);
+        renderMonthlyChart(allIncomes, allExpenses, monthInput.value);
+        renderCategoryCharts(expenses);
+
+        setStatus("Relatório actualizado com sucesso.");
+      } catch (error) {
+        console.error("Erro nos relatórios:", error);
+
+        const detail = error && error.message
+          ? error.message
+          : String(error);
+
+        setStatus("Erro ao carregar relatórios: " + detail);
+      } finally {
+        generateButton.disabled = false;
+      }
+    }
+
+    const now = new Date();
+
+    monthInput.value =
+      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+    generateButton.addEventListener("click", generateReport);
+
+    monthInput.addEventListener("change", () => {
+      if (monthInput.value) generateReport();
+    });
+
+    generateReport();
+  })();
+  </script>
 </body>
 </html>
