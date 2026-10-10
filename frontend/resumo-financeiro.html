@@ -505,18 +505,20 @@
       $("currentYear").textContent = new Date().getFullYear();
       setInitialMonth();
 
-      if (
-        !window.supabase ||
-        typeof window.supabase.createClient !== "function" ||
-        !SUPABASE_PUBLISHABLE_KEY ||
-        SUPABASE_PUBLISHABLE_KEY.includes("sb_publishable_QMW_RE_Yiej2RMhu9Z67OA_qeK_Pbgi")
-      ) {
-        showMessage(
-          "Configuração incompleta. Introduza a chave pública do Supabase utilizada no painel principal.",
-          "error"
-        );
-        return;
-      }
+     
+if (
+  !window.supabase ||
+  typeof window.supabase.createClient !== "function" ||
+  !SUPABASE_PUBLISHABLE_KEY ||
+  SUPABASE_PUBLISHABLE_KEY.includes("COLOCA_AQUI")
+) {
+  showMessage(
+    "Configuração incompleta. Introduza a chave pública do Supabase utilizada no painel principal.",
+    "error"
+  );
+  return;
+}
+
 
       supabaseClient = window.supabase.createClient(
         SUPABASE_URL,
