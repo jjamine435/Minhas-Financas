@@ -1,10 +1,10 @@
-
+```html
 <!DOCTYPE html>
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Relatórios Financeiros</title>
+  <title>Relatórios Financeiros | Minhas-Financas</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -29,12 +29,23 @@
     }
 
     header h1 { margin: 0 0 8px; }
+    header p { margin-bottom: 0; }
 
     main {
       max-width: 1100px;
       margin: 25px auto;
       padding: 0 16px;
     }
+
+    .back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      color: #1769aa;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    .back-link:hover { text-decoration: underline; }
 
     .panel {
       background: white;
@@ -88,11 +99,11 @@
     }
 
     .metric p { margin: 0 0 10px; color: #64748b; }
-    .metric h2 { margin: 0; font-size: 24px; }
+    .metric h2 { margin: 0; font-size: 24px; overflow-wrap: anywhere; }
 
     .chart-container {
       position: relative;
-      min-height: 280px;
+      height: 300px;
     }
 
     table {
@@ -108,20 +119,31 @@
     }
 
     th { background: #f1f5f9; }
-
     .table-wrap { overflow-x: auto; }
 
     .status {
       margin: 15px 0 0;
       color: #475569;
+      overflow-wrap: anywhere;
     }
 
     .positive { color: #15803d; }
     .negative { color: #b91c1c; }
 
+    .notice {
+      background: #eff6ff;
+      color: #1e40af;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+
     @media (max-width: 600px) {
       .filters { align-items: stretch; }
       .filters > * { width: 100%; }
+      .panel { padding: 16px; }
+      th, td { padding: 8px; }
     }
   </style>
 </head>
@@ -133,6 +155,8 @@
 </header>
 
 <main>
+  <a href="dashboard.html" class="back-link">← Voltar ao Dashboard</a>
+
   <section class="panel">
     <h2>Seleccionar período</h2>
 
@@ -156,8 +180,13 @@
     </div>
 
     <p id="reportStatus" class="status" role="status" aria-live="polite">
-      A preparar o relatório...
+      A verificar a sessão...
     </p>
+
+    <div class="notice">
+      Os dados são consultados para o utilizador autenticado.
+      Se não tiver sessão iniciada, entre na plataforma e volte a este relatório.
+    </div>
   </section>
 
   <section class="panel">
@@ -207,7 +236,7 @@
         <thead>
           <tr>
             <th>Categoria</th>
-            <th>Quantidade de movimentos</th>
+            <th>N.º de movimentos</th>
             <th>Total</th>
           </tr>
         </thead>
@@ -228,11 +257,12 @@
             <th>Descrição</th>
             <th>Categoria</th>
             <th>Tipo</th>
+            <th>Pagamento</th>
             <th>Valor</th>
           </tr>
         </thead>
         <tbody id="movementsTable">
-          <tr><td colspan="5">Sem movimentos disponíveis.</td></tr>
+          <tr><td colspan="6">Sem movimentos disponíveis.</td></tr>
         </tbody>
       </table>
     </div>
@@ -240,24 +270,13 @@
 </main>
 
 <script>
-  /*
-   * CONFIGURAÇÃO SUPABASE
-   *
-   * Substitua os valores abaixo pela URL e pela chave pública
-   * publishable/anon do seu projecto Supabase.
-   *
-   * Nunca coloque uma chave service_role neste ficheiro.
-   */
+  // CONFIGURAÇÃO DO SUPABASE
   const SUPABASE_URL = "https://bbtnybirxmsxqthgbxmf.supabase.co";
   const SUPABASE_KEY = "sb_publishable_QMW_RE_Yiej2RMhu9Z67OA_qeK_Pbgi";
 
-  /*
-   * IMPORTANTE:
-   * Confirme estes nomes no esquema real do seu Supabase.
-   * Este exemplo pressupõe uma tabela "movimentos" com as colunas:
-   * id, user_id, data, descricao, categoria, tipo, valor.
-   */
-  const TABLE_NAME = "movimentos";
+  // Nomes reais das tabelas confirmados pela estrutura partilhada.
+  const EXPENSES_TABLE = "expenses";
+  const INCOME_TABLE = "income";
 
   const money = value =>
     new Intl.NumberFormat("pt-MZ", {
@@ -282,7 +301,6 @@
   let supabaseClient = null;
   let incomeExpenseChart = null;
   let categoryChart = null;
-
   let reportData = {
     month: "",
     income: 0,
@@ -297,30 +315,30 @@
     document.getElementById("reportStatus").textContent = message;
   }
 
-  function getMonth() {
-    return document.getElementById("reportMonth").value;
+  function getLocalMonth() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   }
 
-  function isConfigured() {
-    return SUPABASE_URL.startsWith("https://") &&
-      !SUPABASE_URL.includes("COLOQUE_AQUI") &&
-      SUPABASE_KEY.length > 20 &&
-      !SUPABASE_KEY.includes("COLOQUE_AQUI");
+  function getMonthBounds(month) {
+    const [year, monthNumber] = month.split("-").map(Number);
+
+    const startDate =
+      `${year}-${String(monthNumber).padStart(2, "0")}-01`;
+
+    const nextMonth = new Date(year, monthNumber, 1);
+
+    const endDate =
+      `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, "0")}-01`;
+
+    return { startDate, endDate };
   }
 
-  async function loadReport() {
-    const month = getMonth();
-
-    if (!month) {
-      setStatus("Seleccione o mês que pretende consultar.");
-      return;
-    }
-
-    if (!isConfigured()) {
-      setStatus(
-        "Configure primeiro a URL e a chave pública do Supabase no código."
+  function getClient() {
+    if (!window.supabase) {
+      throw new Error(
+        "A biblioteca Supabase não carregou. Verifique a ligação à Internet."
       );
-      return;
     }
 
     if (!supabaseClient) {
@@ -330,73 +348,105 @@
       );
     }
 
-    setStatus("A carregar os dados do relatório...");
+    return supabaseClient;
+  }
+
+  async function loadReport() {
+    const month = document.getElementById("reportMonth").value;
+
+    if (!month) {
+      setStatus("Seleccione o mês que pretende consultar.");
+      return;
+    }
+
+    const button = document.getElementById("generateReport");
+    button.disabled = true;
+    setStatus("A verificar a sessão e a carregar os dados...");
 
     try {
-      const { data: sessionData, error: sessionError } =
-        await supabaseClient.auth.getSession();
+      const client = getClient();
 
-      if (sessionError) throw sessionError;
+      const { data: sessionData, error: sessionError } =
+        await client.auth.getSession();
+
+      if (sessionError) {
+        throw new Error("Não foi possível verificar a sessão: " + sessionError.message);
+      }
 
       const user = sessionData.session?.user;
 
       if (!user) {
         setStatus(
-          "Inicie sessão para consultar os seus dados financeiros."
+          "Não existe uma sessão activa neste navegador. Entre na plataforma Minhas-Financas e volte a abrir os relatórios. Se continuar, confirme se o login usa o mesmo projecto Supabase."
         );
         return;
       }
 
-      const [year, monthNumber] = month.split("-").map(Number);
-      const startDate =
-        `${year}-${String(monthNumber).padStart(2, "0")}-01`;
+      const { startDate, endDate } = getMonthBounds(month);
 
-      const nextMonthDate = new Date(year, monthNumber, 1);
-      const endDate = [
-        nextMonthDate.getFullYear(),
-        String(nextMonthDate.getMonth() + 1).padStart(2, "0"),
-        "01"
-      ].join("-");
-
-      const { data, error } = await supabaseClient
-        .from(TABLE_NAME)
-        .select("id,user_id,data,descricao,categoria,tipo,valor")
+      // Consultar as despesas do utilizador autenticado.
+      const expensesResult = await client
+        .from(EXPENSES_TABLE)
+        .select("id,user_id,description,amount,expense_date,category,payment_method,notes,created_at")
         .eq("user_id", user.id)
-        .gte("data", startDate)
-        .lt("data", endDate)
-        .order("data", { ascending: true });
+        .gte("expense_date", startDate)
+        .lt("expense_date", endDate)
+        .order("expense_date", { ascending: true });
 
-      if (error) throw error;
+      if (expensesResult.error) {
+        throw new Error(
+          "Erro ao consultar despesas: " + expensesResult.error.message
+        );
+      }
 
-      const movements = (data || []).map(item => ({
-        date: item.data,
-        description: item.descricao || "",
-        category: item.categoria || "Sem categoria",
-        type: String(item.tipo || "").toLowerCase(),
-        value: Number(item.valor) || 0
+      // Consultar as receitas do utilizador autenticado.
+      const incomeResult = await client
+        .from(INCOME_TABLE)
+        .select("id,user_id,description,amount,income_date,category,notes,created_at")
+        .eq("user_id", user.id)
+        .gte("income_date", startDate)
+        .lt("income_date", endDate)
+        .order("income_date", { ascending: true });
+
+      if (incomeResult.error) {
+        throw new Error(
+          "Erro ao consultar receitas: " + incomeResult.error.message
+        );
+      }
+
+      const expenses = (expensesResult.data || []).map(item => ({
+        date: item.expense_date,
+        description: item.description || "",
+        category: item.category || "Sem categoria",
+        type: "Despesa",
+        value: Number(item.amount) || 0,
+        paymentMethod: item.payment_method || "—"
       }));
 
-      /*
-       * Ajuste os valores reconhecidos abaixo caso a sua base de
-       * dados use nomes diferentes para receitas e despesas.
-       */
-      const isIncome = item =>
-        ["receita", "rendimento", "income"].includes(item.type);
+      const incomes = (incomeResult.data || []).map(item => ({
+        date: item.income_date,
+        description: item.description || "",
+        category: item.category || "Sem categoria",
+        type: "Receita",
+        value: Number(item.amount) || 0,
+        paymentMethod: "—"
+      }));
 
-      const isExpense = item =>
-        ["despesa", "expense"].includes(item.type);
+      const movements = [...incomes, ...expenses].sort((a, b) => {
+        return String(a.date).localeCompare(String(b.date));
+      });
 
-      const income = movements
-        .filter(isIncome)
-        .reduce((sum, item) => sum + item.value, 0);
+      const totalIncome = incomes.reduce(
+        (sum, item) => sum + item.value, 0
+      );
 
-      const expenses = movements
-        .filter(isExpense)
-        .reduce((sum, item) => sum + item.value, 0);
+      const totalExpenses = expenses.reduce(
+        (sum, item) => sum + item.value, 0
+      );
 
       const categoryMap = {};
 
-      movements.filter(isExpense).forEach(item => {
+      expenses.forEach(item => {
         if (!categoryMap[item.category]) {
           categoryMap[item.category] = { count: 0, total: 0 };
         }
@@ -407,45 +457,48 @@
 
       reportData = {
         month,
-        income,
-        expenses,
-        balance: income - expenses,
-        percentage: income > 0 ? expenses / income * 100 : 0,
+        income: totalIncome,
+        expenses: totalExpenses,
+        balance: totalIncome - totalExpenses,
+        percentage: totalIncome > 0
+          ? totalExpenses / totalIncome * 100
+          : 0,
         movements,
-        categories: Object.entries(categoryMap).map(
-          ([category, details]) => ({
+        categories: Object.entries(categoryMap)
+          .map(([category, details]) => ({
             category,
             count: details.count,
             total: details.total
-          })
-        ).sort((a, b) => b.total - a.total)
+          }))
+          .sort((a, b) => b.total - a.total)
       };
 
       renderReport();
-      setStatus("Relatório actualizado com sucesso.");
+      setStatus(
+        `Relatório actualizado. ${incomes.length} receita(s) e ${expenses.length} despesa(s) encontradas.`
+      );
     } catch (error) {
       console.error("Erro ao carregar relatório:", error);
-      setStatus(
-        "Não foi possível carregar os dados. Verifique a tabela, as colunas, a sessão e as políticas RLS do Supabase."
-      );
+      setStatus(error.message || "Ocorreu um erro ao carregar o relatório.");
+    } finally {
+      button.disabled = false;
     }
   }
 
   function renderReport() {
-    const data = reportData;
-
     document.getElementById("totalIncome").textContent =
-      money(data.income);
+      money(reportData.income);
 
     document.getElementById("totalExpenses").textContent =
-      money(data.expenses);
+      money(reportData.expenses);
 
     const balanceElement = document.getElementById("monthlyBalance");
-    balanceElement.textContent = money(data.balance);
-    balanceElement.className = data.balance < 0 ? "negative" : "positive";
+    balanceElement.textContent = money(reportData.balance);
+    balanceElement.className =
+      reportData.balance < 0 ? "negative" : "positive";
 
     document.getElementById("usedPercentage").textContent =
-      `${number(data.percentage)}%`;
+      `${number(reportData.percentage)}%`;
 
     renderMovements();
     renderCategories();
@@ -457,7 +510,7 @@
 
     if (!reportData.movements.length) {
       tbody.innerHTML =
-        '<tr><td colspan="5">Não existem movimentos neste mês.</td></tr>';
+        '<tr><td colspan="6">Não existem movimentos neste mês.</td></tr>';
       return;
     }
 
@@ -467,6 +520,7 @@
         <td>${escapeHTML(item.description)}</td>
         <td>${escapeHTML(item.category)}</td>
         <td>${escapeHTML(item.type)}</td>
+        <td>${escapeHTML(item.paymentMethod)}</td>
         <td>${escapeHTML(money(item.value))}</td>
       </tr>
     `).join("");
@@ -477,7 +531,7 @@
 
     if (!reportData.categories.length) {
       tbody.innerHTML =
-        '<tr><td colspan="3">Não existem despesas categorizadas neste mês.</td></tr>';
+        '<tr><td colspan="3">Não existem despesas neste mês.</td></tr>';
       return;
     }
 
@@ -491,6 +545,11 @@
   }
 
   function renderCharts() {
+    if (!window.Chart) {
+      setStatus("Os dados foram carregados, mas a biblioteca dos gráficos não está disponível.");
+      return;
+    }
+
     if (incomeExpenseChart) incomeExpenseChart.destroy();
     if (categoryChart) categoryChart.destroy();
 
@@ -507,17 +566,15 @@
               reportData.expenses,
               reportData.balance
             ],
-            backgroundColor: [
-              "#16a34a",
-              "#dc2626",
-              "#2563eb"
-            ]
+            backgroundColor: ["#16a34a", "#dc2626", "#2563eb"]
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          scales: { y: { beginAtZero: true } }
+          scales: {
+            y: { beginAtZero: true }
+          }
         }
       }
     );
@@ -552,6 +609,7 @@
     }
 
     const doc = new window.jspdf.jsPDF();
+
     doc.setFontSize(18);
     doc.text("Relatório Financeiro", 14, 18);
 
@@ -562,25 +620,28 @@
     doc.text(`Saldo: ${money(reportData.balance)}`, 14, 52);
     doc.text(
       `Receitas utilizadas: ${number(reportData.percentage)}%`,
-      14,
-      60
+      14, 60
     );
 
     doc.autoTable({
       startY: 68,
-      head: [["Data", "Descrição", "Categoria", "Tipo", "Valor"]],
+      head: [["Data", "Descrição", "Categoria", "Tipo", "Pagamento", "Valor"]],
       body: reportData.movements.map(item => [
         item.date,
         item.description,
         item.category,
         item.type,
+        item.paymentMethod,
         money(item.value)
       ]),
-      styles: { fontSize: 8 },
+      styles: { fontSize: 7 },
       headStyles: { fillColor: [23, 54, 93] }
     });
 
+    const nextY = (doc.lastAutoTable?.finalY || 68) + 10;
+
     doc.autoTable({
+      startY: nextY,
       head: [["Categoria", "N.º de movimentos", "Total"]],
       body: reportData.categories.map(item => [
         item.category,
@@ -643,6 +704,7 @@
           Descricao: item.description,
           Categoria: item.category,
           Tipo: item.type,
+          Pagamento: item.paymentMethod,
           Valor_MT: item.value
         }))
       ),
@@ -666,8 +728,32 @@
   document.getElementById("exportExcel")
     .addEventListener("click", exportExcel);
 
-  document.getElementById("reportMonth").value =
-    new Date().toISOString().slice(0, 7);
+  document.getElementById("reportMonth").value = getLocalMonth();
+
+  // Verificar a sessão ao abrir a página e tentar carregar o relatório.
+  (async function initialiseReport() {
+    try {
+      const client = getClient();
+      const { data, error } = await client.auth.getSession();
+
+      if (error) throw error;
+
+      if (!data.session?.user) {
+        setStatus(
+          "Não foi encontrada uma sessão activa. Entre na plataforma e depois volte a este relatório."
+        );
+        return;
+      }
+
+      await loadReport();
+    } catch (error) {
+      console.error("Erro ao iniciar relatório:", error);
+      setStatus(
+        error.message || "Não foi possível verificar a sessão do Supabase."
+      );
+    }
+  })();
 </script>
 </body>
 </html>
+```
