@@ -1058,17 +1058,61 @@
             </div>
 
             <div class="form-group">
-              <label for="expenseCategory">Categoria</label>
-              <select id="expenseCategory" name="category" required>
-                <option value="Alimentação">Alimentação</option>
-                <option value="Transporte">Transporte</option>
-                <option value="Habitação">Habitação</option>
-                <option value="Saúde">Saúde</option>
-                <option value="Educação">Educação</option>
-                <option value="Comunicação">Comunicação</option>
-                <option value="Lazer">Lazer</option>
-                <option value="Outros" selected>Outros</option>
-              </select>
+        
+<label for="expenseCategory">Categoria</label>
+
+<input
+  type="text"
+  id="expenseCategory"
+  name="category"
+  list="expenseCategorySuggestions"
+  placeholder="Escreve ou selecciona uma categoria"
+  autocomplete="off"
+  maxlength="80"
+  required
+>
+
+<datalist id="expenseCategorySuggestions">
+  <option value="Alimentação">
+  <option value="Transporte">
+  <option value="Habitação">
+  <option value="Água">
+  <option value="Electricidade">
+  <option value="Água e electricidade">
+  <option value="Gás doméstico">
+  <option value="Saúde">
+  <option value="Medicamentos">
+  <option value="Educação">
+  <option value="Material escolar">
+  <option value="Comunicação">
+  <option value="Comunicação / Internet">
+  <option value="Internet">
+  <option value="Vestuário">
+  <option value="Calçado">
+  <option value="Higiene pessoal">
+  <option value="Produtos de limpeza">
+  <option value="Lazer">
+  <option value="Família">
+  <option value="Creche">
+  <option value="Cuidados infantis">
+  <option value="Combustível">
+  <option value="Manutenção de viatura">
+  <option value="Manutenção da casa">
+  <option value="Impostos e taxas">
+  <option value="Dívidas">
+  <option value="Prestação de crédito">
+  <option value="Poupança">
+  <option value="Investimentos">
+  <option value="Seguros">
+  <option value="Despesas bancárias">
+  <option value="Animais domésticos">
+  <option value="Eventos e cerimónias">
+  <option value="Viagens">
+  <option value="Despesas profissionais">
+  <option value="Negócio">
+  <option value="Emergências">
+  <option value="Outros">
+</datalist>
             </div>
 
             <div class="form-group">
