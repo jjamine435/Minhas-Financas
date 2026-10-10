@@ -956,9 +956,10 @@
 
         if (paymentResult.error) throw paymentResult.error;
 
-        const status = remaining <= 0
-          ? "liquidado"
-          : paidTotal > 0 ? "parcialmente_pago" : "pendente";
+       
+const status = remaining <= 0
+  ? "paid"
+  : "active";
 
         const debtResult = await client.from("debts")
           .update({
