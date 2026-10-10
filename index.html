@@ -907,6 +907,11 @@
           <span class="sidebar-label">Orçamento</span>
         </button>
 
+<button type="button" class="sidebar-link" data-module="debts" title="Gestão de Dívidas">
+  <span class="sidebar-icon">↔</span>
+  <span class="sidebar-label">Dívidas</span>
+</button>
+
 <button type="button" class="sidebar-link" data-module="financial-summary" title="Resumo Financeiro">
   <span class="sidebar-icon">▤</span>
   <span class="sidebar-label">Resumo Financeiro</span>
@@ -1425,6 +1430,11 @@ function showModule(moduleName) {
 
 if (moduleName === "financial-summary") {
   window.location.href = "frontend/resumo-financeiro.html";
+  return;
+}
+
+if (moduleName === "debts") {
+  window.location.href = "frontend/dividas.html";
   return;
 }
 
