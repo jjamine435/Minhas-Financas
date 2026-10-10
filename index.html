@@ -907,6 +907,11 @@
           <span class="sidebar-label">Orçamento</span>
         </button>
 
+<button type="button" class="sidebar-link" data-module="financial-summary" title="Resumo Financeiro">
+  <span class="sidebar-icon">▤</span>
+  <span class="sidebar-label">Resumo Financeiro</span>
+</button>
+
         <button type="button" class="sidebar-link"
                 data-module="savings" title="Poupanças">
           <span class="sidebar-icon">◎</span>
@@ -1417,6 +1422,11 @@ function showModule(moduleName) {
     window.location.href = "frontend/relatorios.html";
     return;
   }
+
+if (moduleName === "financial-summary") {
+  window.location.href = "frontend/resumo-financeiro.html";
+  return;
+}
 
 if (moduleName === "budget") {
   window.location.href = "frontend/orcamento.html";
