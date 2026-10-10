@@ -1,0 +1,768 @@
+
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resumo Financeiro | Minhas Finanças</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --primary: #2457c5;
+      --primary-dark: #183f96;
+      --background: #f4f7fb;
+      --surface: #ffffff;
+      --text: #172033;
+      --muted: #697586;
+      --border: #e0e6ef;
+      --green: #16845b;
+      --red: #c03945;
+      --radius: 16px;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--background);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 5%;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      font-size: 21px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .container {
+      width: min(1200px, 92%);
+      margin: 30px auto;
+    }
+
+    .page-heading {
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: clamp(25px, 4vw, 34px);
+      margin-bottom: 6px;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      margin-bottom: 22px;
+    }
+
+    .filter-row {
+      display: flex;
+      align-items: end;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    input, button, .button-link {
+      font: inherit;
+    }
+
+    input[type="month"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: white;
+      color: var(--text);
+    }
+
+    button, .button-link {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      border-radius: 9px;
+      padding: 12px 17px;
+      text-decoration: none;
+      cursor: pointer;
+      font-weight: 700;
+      transition: 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: #eaf0fc;
+      color: var(--primary);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 21px;
+      min-width: 0;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .stat-value {
+      font-size: clamp(20px, 2.4vw, 29px);
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .stat-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .positive {
+      color: var(--green);
+    }
+
+    .negative {
+      color: var(--red);
+    }
+
+    .section-title {
+      font-size: 19px;
+      margin-bottom: 16px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 12px;
+      background: #e9edf4;
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 14px 0 9px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0;
+      background: var(--primary);
+      border-radius: inherit;
+      transition: width 0.3s;
+    }
+
+    .progress-bar.over {
+      background: var(--red);
+    }
+
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 650px;
+    }
+
+    th, td {
+      padding: 14px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    td.numeric, th.numeric {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .empty {
+      padding: 25px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .message {
+      padding: 13px 15px;
+      border-radius: 9px;
+      margin-bottom: 18px;
+      display: none;
+      overflow-wrap: anywhere;
+    }
+
+    .message.error {
+      display: block;
+      background: #fff0f0;
+      color: #a32230;
+    }
+
+    .message.info {
+      display: block;
+      background: #edf4ff;
+      color: #214a96;
+    }
+
+    .message.success {
+      display: block;
+      background: #eaf8f0;
+      color: #176b48;
+    }
+
+    .summary-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      padding: 25px 15px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 520px) {
+      .container {
+        width: 94%;
+        margin: 20px auto;
+      }
+
+      .panel {
+        padding: 16px;
+      }
+
+      .cards {
+        gap: 10px;
+      }
+
+      .stat-card {
+        padding: 15px;
+      }
+
+      .header-content {
+        align-items: flex-start;
+      }
+
+      .filter-row button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="header-content">
+      <div class="brand">Minhas Finanças</div>
+      <a class="button-link btn-secondary" href="../index.html">
+        ← Voltar ao painel
+      </a>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="page-heading">
+      <h1>Resumo Financeiro</h1>
+      <p class="muted">
+        Acompanhe as receitas, despesas e o orçamento do mês seleccionado.
+      </p>
+    </div>
+
+    <div id="message" class="message" role="status" aria-live="polite"></div>
+
+    <section class="panel">
+      <div class="filter-row">
+        <div class="form-group">
+          <label for="reportMonth">Mês do relatório</label>
+          <input type="month" id="reportMonth" required>
+        </div>
+        <button id="loadButton" class="btn-primary" type="button">
+          Actualizar resumo
+        </button>
+      </div>
+    </section>
+
+    <section class="cards" aria-label="Indicadores financeiros">
+      <article class="stat-card">
+        <div class="stat-label">Receitas do mês</div>
+        <div class="stat-value positive" id="totalIncome">—</div>
+        <div class="stat-note">Total de receitas registadas</div>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-label">Despesas do mês</div>
+        <div class="stat-value negative" id="totalExpenses">—</div>
+        <div class="stat-note">Total de despesas registadas</div>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-label">Saldo mensal</div>
+        <div class="stat-value" id="monthlyBalance">—</div>
+        <div class="stat-note">Receitas menos despesas</div>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-label">Orçamento total</div>
+        <div class="stat-value" id="totalBudget">—</div>
+        <div class="stat-note">Limites definidos para o mês</div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <h2 class="section-title">Execução do orçamento</h2>
+      <div>
+        <strong id="budgetPercentage">—</strong>
+        <span class="muted"> do orçamento utilizado</span>
+      </div>
+      <div class="progress-track" aria-label="Percentagem do orçamento utilizado">
+        <div class="progress-bar" id="budgetProgress"></div>
+      </div>
+      <div class="summary-footer">
+        <span id="budgetSpent">Despesas abrangidas pelo orçamento: —</span>
+        <span id="budgetRemaining">Orçamento restante: —</span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2 class="section-title">Resumo por categoria</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Categoria</th>
+              <th class="numeric">Orçamento</th>
+              <th class="numeric">Despesas</th>
+              <th class="numeric">Saldo</th>
+              <th class="numeric">Execução</th>
+            </tr>
+          </thead>
+          <tbody id="categoryRows">
+            <tr>
+              <td colspan="5" class="empty">
+                Seleccione um mês para consultar os dados.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="summary-footer">
+        <span id="categoryCount">0 categorias</span>
+        <span>Valores em meticais (MT)</span>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    © <span id="currentYear"></span> Minhas Finanças.
+    Organize hoje. Conquiste amanhã.
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    // CONFIGURAÇÃO DO SUPABASE
+    const SUPABASE_URL = "https://bbtnybirxmsxqthgbxmf.supabase.co";
+
+    // Coloque aqui a mesma chave pública utilizada em index.html.
+    // Nunca utilize uma chave secret ou service_role no navegador.
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_QMW_RE_Yiej2RMhu9Z67OA_qeK_Pbgi";
+
+    let supabaseClient = null;
+    let currentUser = null;
+
+    const $ = (id) => document.getElementById(id);
+
+    const money = (value) =>
+      new Intl.NumberFormat("pt-MZ", {
+        style: "currency",
+        currency: "MZN",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(Number(value) || 0);
+
+    function showMessage(text, type = "info") {
+      const el = $("message");
+      el.textContent = text;
+      el.className = "message " + type;
+    }
+
+    function clearMessage() {
+      $("message").textContent = "";
+      $("message").className = "message";
+    }
+
+    function getMonthRange(month) {
+      if (!/^\d{4}-\d{2}$/.test(month)) {
+        throw new Error("Seleccione um mês válido.");
+      }
+
+      const [year, monthNumber] = month.split("-").map(Number);
+
+      if (monthNumber < 1 || monthNumber > 12) {
+        throw new Error("O mês seleccionado não é válido.");
+      }
+
+      const start = `${month}-01`;
+      const nextDate = new Date(Date.UTC(year, monthNumber, 1));
+      const next = [
+        nextDate.getUTCFullYear(),
+        String(nextDate.getUTCMonth() + 1).padStart(2, "0"),
+        "01"
+      ].join("-");
+
+      return { start, next };
+    }
+
+    function setInitialMonth() {
+      const now = new Date();
+      $("reportMonth").value =
+        `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    }
+
+    function safeAmount(value) {
+      const amount = Number(value);
+      return Number.isFinite(amount) ? amount : 0;
+    }
+
+    async function init() {
+      $("currentYear").textContent = new Date().getFullYear();
+      setInitialMonth();
+
+      if (
+        !window.supabase ||
+        typeof window.supabase.createClient !== "function" ||
+        !SUPABASE_PUBLISHABLE_KEY ||
+        SUPABASE_PUBLISHABLE_KEY.includes("sb_publishable_QMW_RE_Yiej2RMhu9Z67OA_qeK_Pbgi")
+      ) {
+        showMessage(
+          "Configuração incompleta. Introduza a chave pública do Supabase utilizada no painel principal.",
+          "error"
+        );
+        return;
+      }
+
+      supabaseClient = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY
+      );
+
+      $("loadButton").disabled = true;
+      showMessage("A verificar a sessão do utilizador...", "info");
+
+      const { data, error } = await supabaseClient.auth.getSession();
+
+      if (error) {
+        showMessage("Não foi possível verificar a sessão: " + error.message, "error");
+        return;
+      }
+
+      currentUser = data.session?.user || null;
+
+      if (!currentUser) {
+        showMessage(
+          "A sessão não está activa. Inicie sessão no painel principal e depois volte a esta página.",
+          "error"
+        );
+        $("loadButton").disabled = false;
+        return;
+      }
+
+      $("loadButton").disabled = false;
+      clearMessage();
+
+      await loadSummary();
+    }
+
+    async function loadSummary() {
+      if (!supabaseClient || !currentUser) {
+        showMessage(
+          "Inicie sessão no painel principal antes de consultar o resumo.",
+          "error"
+        );
+        return;
+      }
+
+      const month = $("reportMonth").value;
+
+      let range;
+
+      try {
+        range = getMonthRange(month);
+      } catch (error) {
+        showMessage(error.message, "error");
+        return;
+      }
+
+      const { start, next } = range;
+      const button = $("loadButton");
+
+      button.disabled = true;
+      button.textContent = "A carregar...";
+      clearMessage();
+
+      try {
+        const [incomeResult, expensesResult, budgetsResult] = await Promise.all([
+          supabaseClient
+            .from("income")
+            .select("amount, income_date, category")
+            .eq("user_id", currentUser.id)
+            .gte("income_date", start)
+            .lt("income_date", next),
+
+          supabaseClient
+            .from("expenses")
+            .select("amount, expense_date, category")
+            .eq("user_id", currentUser.id)
+            .gte("expense_date", start)
+            .lt("expense_date", next),
+
+          supabaseClient
+            .from("budgets")
+            .select("amount, month, category")
+            .eq("user_id", currentUser.id)
+            .eq("month", start)
+        ]);
+
+        if (incomeResult.error) {
+          throw new Error("Erro ao consultar receitas: " + incomeResult.error.message);
+        }
+
+        if (expensesResult.error) {
+          throw new Error("Erro ao consultar despesas: " + expensesResult.error.message);
+        }
+
+        if (budgetsResult.error) {
+          throw new Error("Erro ao consultar orçamento: " + budgetsResult.error.message);
+        }
+
+        const incomes = incomeResult.data || [];
+        const expenses = expensesResult.data || [];
+        const budgets = budgetsResult.data || [];
+
+        renderSummary(incomes, expenses, budgets, month);
+
+        showMessage("Resumo actualizado com sucesso.", "success");
+      } catch (error) {
+        console.error("Erro no resumo financeiro:", error);
+        showMessage(error.message || "Não foi possível carregar o resumo financeiro.", "error");
+      } finally {
+        button.disabled = false;
+        button.textContent = "Actualizar resumo";
+      }
+    }
+
+    function renderSummary(incomes, expenses, budgets, month) {
+      const totalIncome = incomes.reduce(
+        (sum, item) => sum + safeAmount(item.amount), 0
+      );
+
+      const totalExpenses = expenses.reduce(
+        (sum, item) => sum + safeAmount(item.amount), 0
+      );
+
+      const totalBudget = budgets.reduce(
+        (sum, item) => sum + safeAmount(item.amount), 0
+      );
+
+      const balance = totalIncome - totalExpenses;
+
+      $("totalIncome").textContent = money(totalIncome);
+      $("totalExpenses").textContent = money(totalExpenses);
+      $("monthlyBalance").textContent = money(balance);
+      $("monthlyBalance").className =
+        "stat-value " + (balance < 0 ? "negative" : "positive");
+      $("totalBudget").textContent = money(totalBudget);
+
+      // Agrega os dados por categoria, preservando os nomes já utilizados.
+      const categoryMap = new Map();
+
+      function getCategory(name) {
+        const category = String(name || "Sem categoria").trim() || "Sem categoria";
+
+        if (!categoryMap.has(category)) {
+          categoryMap.set(category, {
+            category,
+            budget: 0,
+            expenses: 0
+          });
+        }
+
+        return categoryMap.get(category);
+      }
+
+      budgets.forEach((item) => {
+        getCategory(item.category).budget += safeAmount(item.amount);
+      });
+
+      expenses.forEach((item) => {
+        getCategory(item.category).expenses += safeAmount(item.amount);
+      });
+
+      const rows = [...categoryMap.values()].sort((a, b) =>
+        a.category.localeCompare(b.category, "pt")
+      );
+
+      const budgetSpent = rows.reduce((sum, item) => sum + item.expenses, 0);
+      const budgetTotal = rows.reduce((sum, item) => sum + item.budget, 0);
+      const remaining = budgetTotal - budgetSpent;
+      const percentage = budgetTotal > 0 ? (budgetSpent / budgetTotal) * 100 : null;
+
+      $("budgetPercentage").textContent =
+        percentage === null ? "Sem orçamento definido" : `${percentage.toFixed(1)}%`;
+
+      const bar = $("budgetProgress");
+      bar.style.width = percentage === null
+        ? "0%"
+        : `${Math.min(Math.max(percentage, 0), 100)}%`;
+
+      bar.classList.toggle("over", percentage !== null && percentage > 100);
+
+      $("budgetSpent").textContent =
+        "Despesas nas categorias orçamentadas: " + money(budgetSpent);
+
+      $("budgetRemaining").textContent =
+        "Orçamento restante: " + money(remaining);
+
+      const tbody = $("categoryRows");
+      tbody.replaceChildren();
+
+      if (rows.length === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 5;
+        td.className = "empty";
+        td.textContent = "Não existem orçamentos nem despesas por categoria neste mês.";
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      } else {
+        rows.forEach((item) => {
+          const tr = document.createElement("tr");
+          const categoryBalance = item.budget - item.expenses;
+          const execution = item.budget > 0
+            ? `${(item.expenses / item.budget * 100).toFixed(1)}%`
+            : "—";
+
+          const values = [
+            { value: item.category, className: "" },
+            { value: money(item.budget), className: "numeric" },
+            { value: money(item.expenses), className: "numeric" },
+            {
+              value: money(categoryBalance),
+              className: "numeric " + (categoryBalance < 0 ? "negative" : "positive")
+            },
+            { value: execution, className: "numeric" }
+          ];
+
+          values.forEach((itemValue) => {
+            const td = document.createElement("td");
+            td.className = itemValue.className;
+            td.textContent = itemValue.value;
+            tr.appendChild(td);
+          });
+
+          tbody.appendChild(tr);
+        });
+      }
+
+      $("categoryCount").textContent =
+        `${rows.length} ${rows.length === 1 ? "categoria" : "categorias"}`;
+
+      const [year, monthNumber] = month.split("-").map(Number);
+      const monthName = new Intl.DateTimeFormat("pt-PT", {
+        month: "long",
+        year: "numeric",
+        timeZone: "UTC"
+      }).format(new Date(Date.UTC(year, monthNumber - 1, 1)));
+
+      document.title = `Resumo Financeiro — ${monthName} | Minhas Finanças`;
+    }
+
+    $("loadButton").addEventListener("click", loadSummary);
+
+    $("reportMonth").addEventListener("change", () => {
+      if (currentUser) {
+        loadSummary();
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>
