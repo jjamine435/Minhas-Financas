@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -14,29 +13,24 @@
 
   <style>
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       font-family: Arial, sans-serif;
       background: #f4f6f9;
       color: #243047;
     }
-
     header {
       background: #17365d;
       color: white;
       padding: 22px;
     }
-
     header h1 { margin: 0 0 8px; }
     header p { margin-bottom: 0; }
-
     main {
       max-width: 1100px;
       margin: 25px auto;
       padding: 0 16px;
     }
-
     .back-link {
       display: inline-block;
       margin-bottom: 20px;
@@ -44,9 +38,7 @@
       font-weight: bold;
       text-decoration: none;
     }
-
     .back-link:hover { text-decoration: underline; }
-
     .panel {
       background: white;
       padding: 22px;
@@ -54,82 +46,81 @@
       border-radius: 12px;
       box-shadow: 0 2px 9px #0000000d;
     }
-
     .filters {
       display: flex;
       flex-wrap: wrap;
       align-items: end;
       gap: 12px;
     }
-
     .form-group {
       display: flex;
       flex-direction: column;
       gap: 7px;
     }
-
     input, button {
       padding: 11px 14px;
       border-radius: 6px;
       font-size: 14px;
     }
-
     input { border: 1px solid #cbd5e1; }
-
     .btn {
       border: 0;
       cursor: pointer;
       color: white;
       background: #1769aa;
     }
-
     .btn:hover { opacity: .88; }
     .btn:disabled { opacity: .5; cursor: not-allowed; }
-
     .summary {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
       gap: 16px;
     }
-
     .metric {
       border: 1px solid #e2e8f0;
       border-radius: 10px;
       padding: 18px;
+      min-width: 0;
     }
-
     .metric p { margin: 0 0 10px; color: #64748b; }
-    .metric h2 { margin: 0; font-size: 24px; overflow-wrap: anywhere; }
-
+    .metric h2 {
+      margin: 0;
+      font-size: 24px;
+      overflow-wrap: anywhere;
+    }
+    .metric .metric-detail {
+      margin: 8px 0 0;
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .metric .metric-percent {
+      font-weight: bold;
+      color: #1769aa;
+    }
     .chart-container {
       position: relative;
       height: 300px;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 12px;
     }
-
     th, td {
       text-align: left;
       padding: 11px;
       border-bottom: 1px solid #e2e8f0;
     }
-
     th { background: #f1f5f9; }
     .table-wrap { overflow-x: auto; }
-
     .status {
       margin: 15px 0 0;
       color: #475569;
       overflow-wrap: anywhere;
     }
-
     .positive { color: #15803d; }
     .negative { color: #b91c1c; }
-
     .notice {
       background: #eff6ff;
       color: #1e40af;
@@ -138,7 +129,6 @@
       margin-top: 12px;
       line-height: 1.5;
     }
-
     @media (max-width: 600px) {
       .filters { align-items: stretch; }
       .filters > * { width: 100%; }
@@ -151,40 +141,26 @@
 <body>
 <header>
   <h1>Relatórios Financeiros</h1>
-  <p>Analise as suas receitas, despesas e saldo mensal.</p>
+  <p>Analise as suas receitas, despesas, saldo e dívidas mensais.</p>
 </header>
 
 <main>
-  
-<a href="../index.html" class="back-link">← Voltar ao Dashboard</a>
-
+  <a href="../index.html" class="back-link">← Voltar ao Dashboard</a>
 
   <section class="panel">
     <h2>Seleccionar período</h2>
-
     <div class="filters">
       <div class="form-group">
         <label for="reportMonth">Mês do relatório</label>
         <input type="month" id="reportMonth" required>
       </div>
-
-      <button type="button" class="btn" id="generateReport">
-        Actualizar relatório
-      </button>
-
-      <button type="button" class="btn" id="exportPDF">
-        Exportar PDF
-      </button>
-
-      <button type="button" class="btn" id="exportExcel">
-        Exportar Excel
-      </button>
+      <button type="button" class="btn" id="generateReport">Actualizar relatório</button>
+      <button type="button" class="btn" id="exportPDF">Exportar PDF</button>
+      <button type="button" class="btn" id="exportExcel">Exportar Excel</button>
     </div>
-
     <p id="reportStatus" class="status" role="status" aria-live="polite">
       A verificar a sessão...
     </p>
-
     <div class="notice">
       Os dados são consultados para o utilizador autenticado.
       Se não tiver sessão iniciada, entre na plataforma e volte a este relatório.
@@ -193,23 +169,22 @@
 
   <section class="panel">
     <h2>Resumo mensal</h2>
-
     <div class="summary">
       <div class="metric">
         <p>Total de receitas</p>
-        <h2 id="totalIncome">0,00 MT</h2>
+        <h2 id="totalIncome">0,00 MTn</h2>
+        <p class="metric-detail">Base de referência: <span class="metric-percent">100%</span></p>
       </div>
-
       <div class="metric">
         <p>Total de despesas</p>
-        <h2 id="totalExpenses">0,00 MT</h2>
+        <h2 id="totalExpenses">0,00 MTn</h2>
+        <p class="metric-detail">Das receitas: <span id="expensesPercentDetail" class="metric-percent">0%</span></p>
       </div>
-
       <div class="metric">
         <p>Saldo mensal</p>
-        <h2 id="monthlyBalance">0,00 MT</h2>
+        <h2 id="monthlyBalance">0,00 MTn</h2>
+        <p class="metric-detail">Das receitas: <span id="balancePercentDetail" class="metric-percent">0%</span></p>
       </div>
-
       <div class="metric">
         <p>Receitas utilizadas</p>
         <h2 id="usedPercentage">0%</h2>
@@ -218,17 +193,62 @@
   </section>
 
   <section class="panel">
-    <h2>Receitas versus despesas</h2>
-    <div class="chart-container">
-      <canvas id="incomeExpenseChart"></canvas>
+    <h2>Resumo das dívidas</h2>
+    <p class="status">
+      Valores pendentes e pagamentos registados no mês seleccionado.
+      As percentagens são calculadas em relação ao valor inicial das dívidas correspondentes.
+    </p>
+    <div class="summary">
+      <div class="metric">
+        <p>Dívidas por pagar</p>
+        <h2 id="debtsPayable">0,00 MTn</h2>
+        <p class="metric-detail">Saldo pendente: <span id="debtsPayablePercent" class="metric-percent">0%</span> do valor inicial</p>
+      </div>
+      <div class="metric">
+        <p>Valores a receber</p>
+        <h2 id="debtsReceivable">0,00 MTn</h2>
+        <p class="metric-detail">Saldo pendente: <span id="debtsReceivablePercent" class="metric-percent">0%</span> do valor inicial</p>
+      </div>
+      <div class="metric">
+        <p>Pagamentos de dívidas no mês</p>
+        <h2 id="debtPaymentsMonth">0,00 MTn</h2>
+        <p class="metric-detail">Pagamentos de dívidas a pagar: <span id="debtPaymentsPayablePercent" class="metric-percent">0%</span> do valor inicial</p>
+      </div>
+      <div class="metric">
+        <p>Recebimentos de dívidas no mês</p>
+        <h2 id="debtReceiptsMonth">0,00 MTn</h2>
+        <p class="metric-detail">Recebimentos de valores a receber: <span id="debtReceiptsPercent" class="metric-percent">0%</span> do valor inicial</p>
+      </div>
+    </div>
+
+    <h3>Estado das dívidas</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>N.º de dívidas</th>
+            <th>Percentagem</th>
+            <th>Valor inicial</th>
+            <th>Saldo pendente</th>
+            <th>% do valor inicial pendente</th>
+          </tr>
+        </thead>
+        <tbody id="debtsTable">
+          <tr><td colspan="6">Sem dados disponíveis.</td></tr>
+        </tbody>
+      </table>
     </div>
   </section>
 
   <section class="panel">
+    <h2>Receitas versus despesas</h2>
+    <div class="chart-container"><canvas id="incomeExpenseChart"></canvas></div>
+  </section>
+
+  <section class="panel">
     <h2>Despesas por categoria</h2>
-    <div class="chart-container">
-      <canvas id="categoryChart"></canvas>
-    </div>
+    <div class="chart-container"><canvas id="categoryChart"></canvas></div>
   </section>
 
   <section class="panel">
@@ -236,11 +256,7 @@
     <div class="table-wrap">
       <table>
         <thead>
-          <tr>
-            <th>Categoria</th>
-            <th>N.º de movimentos</th>
-            <th>Total</th>
-          </tr>
+          <tr><th>Categoria</th><th>N.º de movimentos</th><th>Total</th></tr>
         </thead>
         <tbody id="categoryTable">
           <tr><td colspan="3">Sem dados disponíveis.</td></tr>
@@ -255,12 +271,8 @@
       <table>
         <thead>
           <tr>
-            <th>Data</th>
-            <th>Descrição</th>
-            <th>Categoria</th>
-            <th>Tipo</th>
-            <th>Pagamento</th>
-            <th>Valor</th>
+            <th>Data</th><th>Descrição</th><th>Categoria</th>
+            <th>Tipo</th><th>Pagamento</th><th>Valor</th>
           </tr>
         </thead>
         <tbody id="movementsTable">
@@ -276,7 +288,6 @@
   const SUPABASE_URL = "https://bbtnybirxmsxqthgbxmf.supabase.co";
   const SUPABASE_KEY = "sb_publishable_QMW_RE_Yiej2RMhu9Z67OA_qeK_Pbgi";
 
-  // Nomes reais das tabelas confirmados pela estrutura partilhada.
   const EXPENSES_TABLE = "expenses";
   const INCOME_TABLE = "income";
 
@@ -303,6 +314,7 @@
   let supabaseClient = null;
   let incomeExpenseChart = null;
   let categoryChart = null;
+
   let reportData = {
     month: "",
     income: 0,
@@ -310,7 +322,20 @@
     balance: 0,
     percentage: 0,
     movements: [],
-    categories: []
+    categories: [],
+    debts: [],
+    debtPayments: [],
+    debtSummary: {
+      payableInitial: 0,
+      payableOutstanding: 0,
+      receivableInitial: 0,
+      receivableOutstanding: 0,
+      paymentsPayable: 0,
+      receiptsReceivable: 0,
+      payableCount: 0,
+      receivableCount: 0,
+      totalDebtCount: 0
+    }
   };
 
   function setStatus(message) {
@@ -324,32 +349,19 @@
 
   function getMonthBounds(month) {
     const [year, monthNumber] = month.split("-").map(Number);
-
-    const startDate =
-      `${year}-${String(monthNumber).padStart(2, "0")}-01`;
-
+    const startDate = `${year}-${String(monthNumber).padStart(2, "0")}-01`;
     const nextMonth = new Date(year, monthNumber, 1);
-
-    const endDate =
-      `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, "0")}-01`;
-
+    const endDate = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, "0")}-01`;
     return { startDate, endDate };
   }
 
   function getClient() {
     if (!window.supabase) {
-      throw new Error(
-        "A biblioteca Supabase não carregou. Verifique a ligação à Internet."
-      );
+      throw new Error("A biblioteca Supabase não carregou. Verifique a ligação à Internet.");
     }
-
     if (!supabaseClient) {
-      supabaseClient = window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_KEY
-      );
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     }
-
     return supabaseClient;
   }
 
@@ -367,9 +379,7 @@
 
     try {
       const client = getClient();
-
-      const { data: sessionData, error: sessionError } =
-        await client.auth.getSession();
+      const { data: sessionData, error: sessionError } = await client.auth.getSession();
 
       if (sessionError) {
         throw new Error("Não foi possível verificar a sessão: " + sessionError.message);
@@ -378,15 +388,12 @@
       const user = sessionData.session?.user;
 
       if (!user) {
-        setStatus(
-          "Não existe uma sessão activa neste navegador. Entre na plataforma Minhas-Financas e volte a abrir os relatórios. Se continuar, confirme se o login usa o mesmo projecto Supabase."
-        );
+        setStatus("Não existe uma sessão activa neste navegador. Entre na plataforma Minhas-Financas e volte a abrir os relatórios. Se continuar, confirme se o login usa o mesmo projecto Supabase.");
         return;
       }
 
       const { startDate, endDate } = getMonthBounds(month);
 
-      // Consultar as despesas do utilizador autenticado.
       const expensesResult = await client
         .from(EXPENSES_TABLE)
         .select("id,user_id,description,amount,expense_date,category,payment_method,notes,created_at")
@@ -396,12 +403,9 @@
         .order("expense_date", { ascending: true });
 
       if (expensesResult.error) {
-        throw new Error(
-          "Erro ao consultar despesas: " + expensesResult.error.message
-        );
+        throw new Error("Erro ao consultar despesas: " + expensesResult.error.message);
       }
 
-      // Consultar as receitas do utilizador autenticado.
       const incomeResult = await client
         .from(INCOME_TABLE)
         .select("id,user_id,description,amount,income_date,category,notes,created_at")
@@ -411,9 +415,30 @@
         .order("income_date", { ascending: true });
 
       if (incomeResult.error) {
-        throw new Error(
-          "Erro ao consultar receitas: " + incomeResult.error.message
-        );
+        throw new Error("Erro ao consultar receitas: " + incomeResult.error.message);
+      }
+
+      // Consultar as dívidas do utilizador autenticado.
+      const debtsResult = await client
+        .from("debts")
+        .select("id,user_id,creditor,description,initial_amount,outstanding_balance,status,debt_type,debt_date,person_name,due_date,created_at")
+        .eq("user_id", user.id);
+
+      if (debtsResult.error) {
+        throw new Error("Erro ao consultar dívidas: " + debtsResult.error.message);
+      }
+
+      // Consultar pagamentos registados durante o mês seleccionado.
+      const debtPaymentsResult = await client
+        .from("debt_payments")
+        .select("id,user_id,debt_id,amount,payment_date,notes,created_at")
+        .eq("user_id", user.id)
+        .gte("payment_date", startDate)
+        .lt("payment_date", endDate)
+        .order("payment_date", { ascending: true });
+
+      if (debtPaymentsResult.error) {
+        throw new Error("Erro ao consultar pagamentos de dívidas: " + debtPaymentsResult.error.message);
       }
 
       const expenses = (expensesResult.data || []).map(item => ({
@@ -434,27 +459,69 @@
         paymentMethod: "—"
       }));
 
-      const movements = [...incomes, ...expenses].sort((a, b) => {
-        return String(a.date).localeCompare(String(b.date));
-      });
-
-      const totalIncome = incomes.reduce(
-        (sum, item) => sum + item.value, 0
+      const movements = [...incomes, ...expenses].sort((a, b) =>
+        String(a.date).localeCompare(String(b.date))
       );
 
-      const totalExpenses = expenses.reduce(
-        (sum, item) => sum + item.value, 0
-      );
-
+      const totalIncome = incomes.reduce((sum, item) => sum + item.value, 0);
+      const totalExpenses = expenses.reduce((sum, item) => sum + item.value, 0);
       const categoryMap = {};
 
       expenses.forEach(item => {
         if (!categoryMap[item.category]) {
           categoryMap[item.category] = { count: 0, total: 0 };
         }
-
         categoryMap[item.category].count += 1;
         categoryMap[item.category].total += item.value;
+      });
+
+      const debts = (debtsResult.data || []).map(item => ({
+        id: item.id,
+        person: item.person_name || item.creditor || "Não indicado",
+        description: item.description || "",
+        type: item.debt_type === "a_receber" ? "a_receber" : "a_pagar",
+        status: item.status || "active",
+        initial: Number(item.initial_amount) || 0,
+        outstanding: Math.max(0, Number(item.outstanding_balance) || 0)
+      }));
+
+      const debtPayments = (debtPaymentsResult.data || []).map(item => ({
+        debtId: item.debt_id,
+        date: item.payment_date,
+        amount: Number(item.amount) || 0,
+        notes: item.notes || ""
+      }));
+
+      const debtsById = new Map(debts.map(debt => [String(debt.id), debt]));
+      let payableInitial = 0;
+      let payableOutstanding = 0;
+      let receivableInitial = 0;
+      let receivableOutstanding = 0;
+      let payableCount = 0;
+      let receivableCount = 0;
+
+      debts.forEach(debt => {
+        if (debt.type === "a_receber") {
+          receivableInitial += debt.initial;
+          receivableOutstanding += debt.outstanding;
+          receivableCount += 1;
+        } else {
+          payableInitial += debt.initial;
+          payableOutstanding += debt.outstanding;
+          payableCount += 1;
+        }
+      });
+
+      let paymentsPayable = 0;
+      let receiptsReceivable = 0;
+
+      debtPayments.forEach(payment => {
+        const relatedDebt = debtsById.get(String(payment.debtId));
+        if (relatedDebt?.type === "a_receber") {
+          receiptsReceivable += payment.amount;
+        } else {
+          paymentsPayable += payment.amount;
+        }
       });
 
       reportData = {
@@ -462,9 +529,7 @@
         income: totalIncome,
         expenses: totalExpenses,
         balance: totalIncome - totalExpenses,
-        percentage: totalIncome > 0
-          ? totalExpenses / totalIncome * 100
-          : 0,
+        percentage: totalIncome > 0 ? totalExpenses / totalIncome * 100 : 0,
         movements,
         categories: Object.entries(categoryMap)
           .map(([category, details]) => ({
@@ -472,13 +537,24 @@
             count: details.count,
             total: details.total
           }))
-          .sort((a, b) => b.total - a.total)
+          .sort((a, b) => b.total - a.total),
+        debts,
+        debtPayments,
+        debtSummary: {
+          payableInitial,
+          payableOutstanding,
+          receivableInitial,
+          receivableOutstanding,
+          paymentsPayable,
+          receiptsReceivable,
+          payableCount,
+          receivableCount,
+          totalDebtCount: payableCount + receivableCount
+        }
       };
 
       renderReport();
-      setStatus(
-        `Relatório actualizado. ${incomes.length} receita(s) e ${expenses.length} despesa(s) encontradas.`
-      );
+      setStatus(`Relatório actualizado. ${incomes.length} receita(s), ${expenses.length} despesa(s) e ${debts.length} dívida(s) encontradas.`);
     } catch (error) {
       console.error("Erro ao carregar relatório:", error);
       setStatus(error.message || "Ocorreu um erro ao carregar o relatório.");
@@ -488,22 +564,21 @@
   }
 
   function renderReport() {
-    document.getElementById("totalIncome").textContent =
-      money(reportData.income);
-
-    document.getElementById("totalExpenses").textContent =
-      money(reportData.expenses);
+    document.getElementById("totalIncome").textContent = money(reportData.income);
+    document.getElementById("totalExpenses").textContent = money(reportData.expenses);
 
     const balanceElement = document.getElementById("monthlyBalance");
     balanceElement.textContent = money(reportData.balance);
-    balanceElement.className =
-      reportData.balance < 0 ? "negative" : "positive";
+    balanceElement.className = reportData.balance < 0 ? "negative" : "positive";
 
-    document.getElementById("usedPercentage").textContent =
-      `${number(reportData.percentage)}%`;
+    document.getElementById("usedPercentage").textContent = `${number(reportData.percentage)}%`;
+    document.getElementById("expensesPercentDetail").textContent = `${number(reportData.percentage)}%`;
+    document.getElementById("balancePercentDetail").textContent =
+      `${number(reportData.income > 0 ? reportData.balance / reportData.income * 100 : 0)}%`;
 
     renderMovements();
     renderCategories();
+    renderDebts();
     renderCharts();
   }
 
@@ -511,8 +586,7 @@
     const tbody = document.getElementById("movementsTable");
 
     if (!reportData.movements.length) {
-      tbody.innerHTML =
-        '<tr><td colspan="6">Não existem movimentos neste mês.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6">Não existem movimentos neste mês.</td></tr>';
       return;
     }
 
@@ -532,8 +606,7 @@
     const tbody = document.getElementById("categoryTable");
 
     if (!reportData.categories.length) {
-      tbody.innerHTML =
-        '<tr><td colspan="3">Não existem despesas neste mês.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="3">Não existem despesas neste mês.</td></tr>';
       return;
     }
 
@@ -542,6 +615,60 @@
         <td>${escapeHTML(item.category)}</td>
         <td>${item.count}</td>
         <td>${escapeHTML(money(item.total))}</td>
+      </tr>
+    `).join("");
+  }
+
+  function renderDebts() {
+    const summary = reportData.debtSummary;
+    const percent = (part, total) => total > 0 ? part / total * 100 : 0;
+
+    document.getElementById("debtsPayable").textContent = money(summary.payableOutstanding);
+    document.getElementById("debtsPayablePercent").textContent =
+      `${number(percent(summary.payableOutstanding, summary.payableInitial))}%`;
+
+    document.getElementById("debtsReceivable").textContent = money(summary.receivableOutstanding);
+    document.getElementById("debtsReceivablePercent").textContent =
+      `${number(percent(summary.receivableOutstanding, summary.receivableInitial))}%`;
+
+    document.getElementById("debtPaymentsMonth").textContent = money(summary.paymentsPayable);
+    document.getElementById("debtPaymentsPayablePercent").textContent =
+      `${number(percent(summary.paymentsPayable, summary.payableInitial))}%`;
+
+    document.getElementById("debtReceiptsMonth").textContent = money(summary.receiptsReceivable);
+    document.getElementById("debtReceiptsPercent").textContent =
+      `${number(percent(summary.receiptsReceivable, summary.receivableInitial))}%`;
+
+    const tbody = document.getElementById("debtsTable");
+
+    if (!reportData.debts.length) {
+      tbody.innerHTML = '<tr><td colspan="6">Não existem dívidas registadas.</td></tr>';
+      return;
+    }
+
+    const rows = [
+      {
+        label: "A pagar",
+        count: summary.payableCount,
+        initial: summary.payableInitial,
+        outstanding: summary.payableOutstanding
+      },
+      {
+        label: "A receber",
+        count: summary.receivableCount,
+        initial: summary.receivableInitial,
+        outstanding: summary.receivableOutstanding
+      }
+    ].filter(item => item.count > 0);
+
+    tbody.innerHTML = rows.map(item => `
+      <tr>
+        <td>${escapeHTML(item.label)}</td>
+        <td>${item.count} (${number(summary.totalDebtCount ? item.count / summary.totalDebtCount * 100 : 0)}%)</td>
+        <td>${number(summary.totalDebtCount ? item.count / summary.totalDebtCount * 100 : 0)}%</td>
+        <td>${escapeHTML(money(item.initial))}</td>
+        <td>${escapeHTML(money(item.outstanding))}</td>
+        <td>${number(item.initial > 0 ? item.outstanding / item.initial * 100 : 0)}%</td>
       </tr>
     `).join("");
   }
@@ -555,48 +682,36 @@
     if (incomeExpenseChart) incomeExpenseChart.destroy();
     if (categoryChart) categoryChart.destroy();
 
-    incomeExpenseChart = new Chart(
-      document.getElementById("incomeExpenseChart"),
-      {
-        type: "bar",
-        data: {
-          labels: ["Receitas", "Despesas", "Saldo"],
-          datasets: [{
-            label: "Valor em MT",
-            data: [
-              reportData.income,
-              reportData.expenses,
-              reportData.balance
-            ],
-            backgroundColor: ["#16a34a", "#dc2626", "#2563eb"]
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: { beginAtZero: true }
-          }
-        }
+    incomeExpenseChart = new Chart(document.getElementById("incomeExpenseChart"), {
+      type: "bar",
+      data: {
+        labels: ["Receitas", "Despesas", "Saldo"],
+        datasets: [{
+          label: "Valor em MTn",
+          data: [reportData.income, reportData.expenses, reportData.balance],
+          backgroundColor: ["#16a34a", "#dc2626", "#2563eb"]
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true } }
       }
-    );
+    });
 
-    categoryChart = new Chart(
-      document.getElementById("categoryChart"),
-      {
-        type: "doughnut",
-        data: {
-          labels: reportData.categories.map(item => item.category),
-          datasets: [{
-            data: reportData.categories.map(item => item.total)
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false
-        }
+    categoryChart = new Chart(document.getElementById("categoryChart"), {
+      type: "doughnut",
+      data: {
+        labels: reportData.categories.map(item => item.category),
+        datasets: [{
+          data: reportData.categories.map(item => item.total)
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
       }
-    );
+    });
   }
 
   function exportPDF() {
@@ -614,43 +729,56 @@
 
     doc.setFontSize(18);
     doc.text("Relatório Financeiro", 14, 18);
-
     doc.setFontSize(11);
     doc.text(`Mês: ${reportData.month}`, 14, 28);
     doc.text(`Receitas: ${money(reportData.income)}`, 14, 36);
     doc.text(`Despesas: ${money(reportData.expenses)}`, 14, 44);
     doc.text(`Saldo: ${money(reportData.balance)}`, 14, 52);
-    doc.text(
-      `Receitas utilizadas: ${number(reportData.percentage)}%`,
-      14, 60
-    );
+    doc.text(`Despesas (% das receitas): ${number(reportData.percentage)}%`, 14, 60);
+    doc.text(`Saldo (% das receitas): ${number(reportData.income > 0 ? reportData.balance / reportData.income * 100 : 0)}%`, 14, 67);
+
+    doc.setFontSize(12);
+    doc.text("Resumo das dívidas", 14, 77);
+    doc.setFontSize(9);
+    doc.text(`Dívidas por pagar: ${money(reportData.debtSummary.payableOutstanding)} (${number(reportData.debtSummary.payableInitial > 0 ? reportData.debtSummary.payableOutstanding / reportData.debtSummary.payableInitial * 100 : 0)}% do valor inicial)`, 14, 84);
+    doc.text(`Valores a receber: ${money(reportData.debtSummary.receivableOutstanding)} (${number(reportData.debtSummary.receivableInitial > 0 ? reportData.debtSummary.receivableOutstanding / reportData.debtSummary.receivableInitial * 100 : 0)}% do valor inicial)`, 14, 91);
+    doc.text(`Pagamentos no mês: ${money(reportData.debtSummary.paymentsPayable)} | Recebimentos no mês: ${money(reportData.debtSummary.receiptsReceivable)}`, 14, 98);
 
     doc.autoTable({
-      startY: 68,
+      startY: 104,
       head: [["Data", "Descrição", "Categoria", "Tipo", "Pagamento", "Valor"]],
       body: reportData.movements.map(item => [
-        item.date,
-        item.description,
-        item.category,
-        item.type,
-        item.paymentMethod,
-        money(item.value)
+        item.date, item.description, item.category,
+        item.type, item.paymentMethod, money(item.value)
       ]),
       styles: { fontSize: 7 },
       headStyles: { fillColor: [23, 54, 93] }
     });
 
-    const nextY = (doc.lastAutoTable?.finalY || 68) + 10;
-
+    const nextY = (doc.lastAutoTable?.finalY || 104) + 10;
     doc.autoTable({
       startY: nextY,
       head: [["Categoria", "N.º de movimentos", "Total"]],
       body: reportData.categories.map(item => [
-        item.category,
-        item.count,
-        money(item.total)
+        item.category, item.count, money(item.total)
       ]),
       styles: { fontSize: 9 },
+      headStyles: { fillColor: [23, 54, 93] }
+    });
+
+    const debtsY = (doc.lastAutoTable?.finalY || nextY) + 10;
+    doc.autoTable({
+      startY: debtsY,
+      head: [["Tipo", "Credor/Pessoa", "Estado", "Valor inicial", "Saldo pendente", "% pendente"]],
+      body: reportData.debts.map(item => [
+        item.type === "a_receber" ? "A receber" : "A pagar",
+        item.person,
+        item.status,
+        money(item.initial),
+        money(item.outstanding),
+        `${number(item.initial > 0 ? item.outstanding / item.initial * 100 : 0)}%`
+      ]),
+      styles: { fontSize: 7 },
       headStyles: { fillColor: [23, 54, 93] }
     });
 
@@ -674,88 +802,94 @@
     const summary = [
       ["Relatório Financeiro"],
       ["Mês", reportData.month],
-      ["Receitas (MT)", reportData.income],
-      ["Despesas (MT)", reportData.expenses],
-      ["Saldo (MT)", reportData.balance],
-      ["Receitas utilizadas (%)", reportData.percentage]
+      ["Receitas (MTn)", reportData.income],
+      ["Despesas (MTn)", reportData.expenses],
+      ["Saldo (MTn)", reportData.balance],
+      ["Despesas (% das receitas)", reportData.percentage],
+      ["Saldo (% das receitas)", reportData.income > 0 ? reportData.balance / reportData.income * 100 : 0],
+      ["Dívidas por pagar - saldo pendente (MTn)", reportData.debtSummary.payableOutstanding],
+      ["Dívidas por pagar - % do valor inicial", reportData.debtSummary.payableInitial > 0 ? reportData.debtSummary.payableOutstanding / reportData.debtSummary.payableInitial * 100 : 0],
+      ["Valores a receber - saldo pendente (MTn)", reportData.debtSummary.receivableOutstanding],
+      ["Valores a receber - % do valor inicial", reportData.debtSummary.receivableInitial > 0 ? reportData.debtSummary.receivableOutstanding / reportData.debtSummary.receivableInitial * 100 : 0],
+      ["Pagamentos de dívidas no mês (MTn)", reportData.debtSummary.paymentsPayable],
+      ["Pagamentos no mês (% do valor inicial)", reportData.debtSummary.payableInitial > 0 ? reportData.debtSummary.paymentsPayable / reportData.debtSummary.payableInitial * 100 : 0],
+      ["Recebimentos de dívidas no mês (MTn)", reportData.debtSummary.receiptsReceivable],
+      ["Recebimentos no mês (% do valor inicial)", reportData.debtSummary.receivableInitial > 0 ? reportData.debtSummary.receiptsReceivable / reportData.debtSummary.receivableInitial * 100 : 0]
     ];
 
-    XLSX.utils.book_append_sheet(
-      workbook,
-      XLSX.utils.aoa_to_sheet(summary),
-      "Resumo"
-    );
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(summary), "Resumo");
 
-    XLSX.utils.book_append_sheet(
-      workbook,
-      XLSX.utils.json_to_sheet(
-        reportData.categories.map(item => ({
-          Categoria: item.category,
-          Movimentos: item.count,
-          Total_MT: item.total
-        }))
-      ),
-      "Despesas por categoria"
-    );
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(
+      reportData.categories.map(item => ({
+        Categoria: item.category,
+        Movimentos: item.count,
+        Total_MTn: item.total,
+        Percentagem_das_despesas: reportData.expenses > 0 ? item.total / reportData.expenses * 100 : 0
+      }))
+    ), "Despesas por categoria");
 
-    XLSX.utils.book_append_sheet(
-      workbook,
-      XLSX.utils.json_to_sheet(
-        reportData.movements.map(item => ({
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(
+      reportData.movements.map(item => ({
+        Data: item.date,
+        Descricao: item.description,
+        Categoria: item.category,
+        Tipo: item.type,
+        Pagamento: item.paymentMethod,
+        Valor_MTn: item.value
+      }))
+    ), "Movimentos");
+
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(
+      reportData.debts.map(item => ({
+        Tipo: item.type === "a_receber" ? "A receber" : "A pagar",
+        Pessoa: item.person,
+        Descricao: item.description,
+        Estado: item.status,
+        Valor_inicial_MTn: item.initial,
+        Saldo_pendente_MTn: item.outstanding,
+        Saldo_pendente_percentual: item.initial > 0 ? item.outstanding / item.initial * 100 : 0
+      }))
+    ), "Dividas");
+
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(
+      reportData.debtPayments.map(item => {
+        const debt = reportData.debts.find(entry => String(entry.id) === String(item.debtId));
+        return {
           Data: item.date,
-          Descricao: item.description,
-          Categoria: item.category,
-          Tipo: item.type,
-          Pagamento: item.paymentMethod,
-          Valor_MT: item.value
-        }))
-      ),
-      "Movimentos"
-    );
+          Divida: debt?.person || "",
+          Tipo: debt?.type === "a_receber" ? "Recebimento" : "Pagamento",
+          Valor_MTn: item.amount,
+          Observacoes: item.notes
+        };
+      })
+    ), "Pagamentos dividas");
 
-    XLSX.writeFile(
-      workbook,
-      `relatorio-financeiro-${reportData.month}.xlsx`
-    );
-
+    XLSX.writeFile(workbook, `relatorio-financeiro-${reportData.month}.xlsx`);
     setStatus("Exportação Excel concluída.");
   }
 
-  document.getElementById("generateReport")
-    .addEventListener("click", loadReport);
-
-  document.getElementById("exportPDF")
-    .addEventListener("click", exportPDF);
-
-  document.getElementById("exportExcel")
-    .addEventListener("click", exportExcel);
-
+  document.getElementById("generateReport").addEventListener("click", loadReport);
+  document.getElementById("exportPDF").addEventListener("click", exportPDF);
+  document.getElementById("exportExcel").addEventListener("click", exportExcel);
   document.getElementById("reportMonth").value = getLocalMonth();
 
-  // Verificar a sessão ao abrir a página e tentar carregar o relatório.
   (async function initialiseReport() {
     try {
       const client = getClient();
       const { data, error } = await client.auth.getSession();
-
       if (error) throw error;
 
       if (!data.session?.user) {
-        setStatus(
-          "Não foi encontrada uma sessão activa. Entre na plataforma e depois volte a este relatório."
-        );
+        setStatus("Não foi encontrada uma sessão activa. Entre na plataforma e depois volte a este relatório.");
         return;
       }
 
       await loadReport();
     } catch (error) {
       console.error("Erro ao iniciar relatório:", error);
-      setStatus(
-        error.message || "Não foi possível verificar a sessão do Supabase."
-      );
+      setStatus(error.message || "Não foi possível verificar a sessão do Supabase.");
     }
   })();
 </script>
 </body>
 </html>
-
