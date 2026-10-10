@@ -328,5 +328,211 @@
   <footer>
     Minhas-Financas · Gestão financeira pessoal
   </footer>
+  
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+(function () {
+  "use strict";
+
+  const SUPABASE_URL = "https://bbtnybirxmsxqthgbxmf.supabase.co";
+
+  // Utilize a chave publishable já configurada no projecto.
+  const SUPABASE_KEY = "COLOQUE_AQUI_A_CHAVE_PUBLISHABLE";
+
+  const { createClient } = window.supabase;
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const monthInput = document.getElementById("reportMonth");
+  const generateButton = document.getElementById("generateReport");
+  const statusElement = document.getElementById("reportStatus");
+
+  const money = new Intl.NumberFormat("pt-MZ", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+
+  function formatMoney(value) {
+    return money.format(value) + " MT";
+  }
+
+  function setStatus(message) {
+    statusElement.textContent = message;
+  }
+
+  function getMonthRange(value) {
+    if (!/^\d{4}-\d{2}$/.test(value)) {
+      throw new Error("Seleccione um mês válido.");
+    }
+
+    const [year, month] = value.split("-").map(Number);
+
+    if (month < 1 || month > 12) {
+      throw new Error("O mês seleccionado é inválido.");
+    }
+
+    const start = `${value}-01`;
+    const nextYear = month === 12 ? year + 1 : year;
+    const nextMonth = month === 12 ? 1 : month + 1;
+    const end = `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`;
+
+    return { start, end };
+  }
+
+  function sumAmounts(items) {
+    return items.reduce((sum, item) => {
+      const amount = Number(item.amount);
+      return sum + (Number.isFinite(amount) ? amount : 0);
+    }, 0);
+  }
+
+  function renderCategories(expenses) {
+    const tbody = document.getElementById("reportCategoryHistory");
+    tbody.replaceChildren();
+
+    const totals = {};
+
+    expenses.forEach(item => {
+      const category = item.category || "Sem categoria";
+      const amount = Number(item.amount) || 0;
+      totals[category] = (totals[category] || 0) + amount;
+    });
+
+    const total = sumAmounts(expenses);
+    const entries = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+
+    if (!entries.length) {
+      const row = tbody.insertRow();
+      const cell = row.insertCell();
+      cell.colSpan = 3;
+      cell.className = "empty";
+      cell.textContent = "Não existem despesas neste mês.";
+      return;
+    }
+
+    entries.forEach(([category, amount]) => {
+      const row = tbody.insertRow();
+      row.insertCell().textContent = category;
+      row.insertCell().textContent = formatMoney(amount);
+
+      const percentage = total > 0 ? amount / total * 100 : 0;
+      row.insertCell().textContent =
+        percentage.toLocaleString("pt-MZ", {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1
+        }) + "%";
+    });
+  }
+
+  async function generateReport() {
+    generateButton.disabled = true;
+    setStatus("A carregar os movimentos financeiros...");
+
+    try {
+      if (SUPABASE_KEY === "COLOQUE_AQUI_A_CHAVE_PUBLISHABLE") {
+        throw new Error("Falta configurar a chave publishable do Supabase.");
+      }
+
+      const { data: sessionData, error: sessionError } =
+        await supabase.auth.getSession();
+
+      if (sessionError) throw sessionError;
+
+      if (!sessionData.session) {
+        setStatus(
+          "Não existe uma sessão activa nesta página. Entre na aplicação e tente novamente."
+        );
+        return;
+      }
+
+      const userId = sessionData.session.user.id;
+      const { start, end } = getMonthRange(monthInput.value);
+
+      const [incomeResult, expenseResult] = await Promise.all([
+        supabase
+          .from("income")
+          .select("amount, category, income_date")
+          .eq("user_id", userId)
+          .gte("income_date", start)
+          .lt("income_date", end),
+
+        supabase
+          .from("expenses")
+          .select("amount, category, expense_date")
+          .eq("user_id", userId)
+          .gte("expense_date", start)
+          .lt("expense_date", end)
+      ]);
+
+      if (incomeResult.error) throw incomeResult.error;
+      if (expenseResult.error) throw expenseResult.error;
+
+      const incomes = incomeResult.data || [];
+      const expenses = expenseResult.data || [];
+
+      const income = sumAmounts(incomes);
+      const expense = sumAmounts(expenses);
+      const balance = income - expense;
+
+      document.getElementById("reportIncome").textContent =
+        formatMoney(income);
+
+      document.getElementById("reportExpenses").textContent =
+        formatMoney(expense);
+
+      const balanceElement = document.getElementById("reportBalance");
+      balanceElement.textContent = formatMoney(balance);
+      balanceElement.className = balance >= 0 ? "positive" : "negative";
+
+      const usage = income > 0 ? expense / income * 100 : 0;
+
+      document.getElementById("reportUsage").textContent =
+        income > 0
+          ? usage.toLocaleString("pt-MZ", { maximumFractionDigits: 1 }) +
+            "% das receitas utilizadas."
+          : "Não é possível calcular a percentagem sem receitas.";
+
+      document.getElementById("reportUsageBar").style.width =
+        Math.min(Math.max(usage, 0), 100) + "%";
+
+      document.getElementById("reportUsageNote").textContent =
+        income <= 0
+          ? "Registe receitas para calcular a utilização."
+          : usage > 100
+            ? "As despesas ultrapassaram as receitas do mês."
+            : "Percentagem calculada com base nas receitas do mês.";
+
+      document.getElementById("reportSummary").textContent =
+        `Foram registadas ${incomes.length} receitas e ` +
+        `${expenses.length} despesas. ` +
+        (balance >= 0
+          ? `O saldo mensal é positivo em ${formatMoney(balance)}.`
+          : `As despesas excederam as receitas em ${formatMoney(Math.abs(balance))}.`);
+
+      renderCategories(expenses);
+      setStatus("Relatório actualizado com sucesso.");
+    } catch (error) {
+      console.error("Erro nos relatórios:", error);
+      setStatus(
+        "Não foi possível carregar os dados. Verifique a configuração, a sessão e as permissões do Supabase."
+      );
+    } finally {
+      generateButton.disabled = false;
+    }
+  }
+
+  const now = new Date();
+  monthInput.value =
+    `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+  generateButton.addEventListener("click", generateReport);
+
+  monthInput.addEventListener("change", () => {
+    if (monthInput.value) generateReport();
+  });
+
+  generateReport();
+})();
+</script>
 </body>
 </html>
